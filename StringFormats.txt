@@ -11,18 +11,23 @@ Transmission string format: NETWORKING MODULE
 [e]--> code for client/server interaction
 	| = "n"-->new opponent 	(server command)			requests new opponent
 	| = "t"-->terminate connection. (server command) 	sent when a player closes down his game. 
-	| = "o"-->opponent inquiry (server command)			sent to server to see whether or not calling client has an opponent
+	| = "o"-->opponent inquiry (both command)			sent to server to see whether or not calling client has an opponent
 	| = "i"-->initialize client. (client command)		this is sent to client so that it can take the [bcd] id and associate it with itself 
-	| = "c"-->command. (client command)					Means that the string contains client data and should be passed directly to a client. 
-	| = "p"-->ping (client command)						This will send a client message back to the same client for a self-test.
+	| = "c"-->command. (both command)					Means that the string contains client data and should be passed directly to a client. 
 	| = "d"-->disconnected (server command)				Server informs client that client has been disconnected from opponent.
 
 [...]--> rest of the string that will be encoded and decoded by the back end of the game, not the networking module.
 
 SERVER to CLIENT COMMANDS
-[beginning]_[o]_[t]_[xxx]--> "t" indicates that player has opponent, and following [xxx] is the opponent's id.
-[beginning]_[o]_[f]--------> "f" indicates that player does not have opponent.
+[beginning]_[o]_[t]_[xxx]-------> "t" indicates that player has opponent, and following [xxx] is the opponent's id.
+[beginning]_[o]_[f]-------------> "f" indicates that player does not have opponent.
 
-[beginning]_[n]_[xxx]------> "n" indicates that a new opponent has been established, and following [xxx] is the id of that opponent.
+[beginning]_[t]-----------------> "t" indicates that a client has requested to terminate connection
 
-[beginning]_[d]------------> "d" indicates that opponent has been disconnected
+[beginning]_[c]_[xxx]_[String]--> "c" indicates that [String] data should be sent directly to client [xxx].
+
+[beginning]_[n]_[t]_[xxx]-------> "n" indicates that a new opponent has been established, and following [xxx] is the id of that opponent.
+[beginning]_[n]_[f]
+
+[beginning]_[d]-----------------> "d" indicates that opponent has been disconnected
+

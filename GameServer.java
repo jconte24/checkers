@@ -6,7 +6,7 @@ import java.net.*;
 /**
 *Class acts as a server for the checkers game. It allows players to communicate with each other.
 *Class inherits from Thread for the purpose of continually pulling and pushing data
-*@version 1.5
+*@version 2
 *@author Dan Martineau
 */
 public class GameServer extends Thread
@@ -124,21 +124,23 @@ public class GameServer extends Thread
 			String newOpp = null;
 			int count = 1;
 
-			//keep trying to find new opponent
-			while(newOpp==null && count < 5)
+			newOpp = findOpp(id);
+			
+			if(newOpp != null)
 			{
-				System.out.println("Finding new opponent. Attempt #" + count);
-				newOpp = findOpp(id);
-				//wait three seconds before trying again.
-				TimeUnit.SECONDS.sleep(3);
-				count++;
+				node = getNode(id);
+				enqueStr = "c " + id + " n t " + node.getOppID();
+				(node.getMyQueue()).enque(enqueStr);
+
+				System.out.println("New opponent found: " + node.getOppID());
 			}
-
-			node = getNode(id);
-			enqueStr = "c " + id + " n " + node.getOppID();
-			(node.getMyQueue()).enque(enqueStr);
-
-			System.out.println("New opponent found: " + node.getOppID());
+			else
+			{
+				node = getNode(id);
+				enqueStr = "c " + id + " n f ";
+				(node.getMyQueue()).enque(enqueStr);
+				System.out.println("No other players found.");
+			}
 		}
 		else if(data.substring(6,7).equals("t"))
 		{
@@ -228,7 +230,9 @@ public class GameServer extends Thread
 			Node holder = getNode(oppID);
 
 			if(holder != null)
+			{
 				node = new Node(myID, myPack, myQueue, oppID);
+			}
 			else
 			{
 				System.out.println("An opponent was found, but was null...that's weird. Gonna have to blow up the server.");
@@ -250,9 +254,11 @@ public class GameServer extends Thread
 		String id = "";
 
 		if(clients.size() < 10)
-			id = clients.size() + "00";
+			id = "00" + clients.size();
+		else if(clients.size() < 100)
+			id = "0" + clients.size();
 		else
-			id = clients.size() + "0";
+			id = "" + clients.size();
 
 		return id;
 	}
@@ -271,7 +277,7 @@ public class GameServer extends Thread
 		{
 			for(int i = 0; i < clients.size(); i++)
 			{
-				if(clients.get(i).getOppID()==null && clients.get(i).getMyID() != playerID)
+				if(clients.get(i).getOppID()==null && (!(clients.get(i).getMyID().equals(playerID))))
 				{
 					//get id of new opponent
 					id = clients.get(i).getMyID();
@@ -346,7 +352,7 @@ public class GameServer extends Thread
 		for(;;)
 		{
 			try
-			{
+			{	
 				//buffer for message
 				byte[] buffer = new byte[512];
 
@@ -367,9 +373,6 @@ public class GameServer extends Thread
 				{
 					//retrives outgoing data and converts it to bytes
 					buffer = (currNode.getMyQueue().deque()).getBytes();
-
-					//InetAddress ip = currNode.getMyIP();
-					//int thisPort = currNode.getMyPort();
 
 					packet = currNode.getMyPack();
 					packet = new DatagramPacket(buffer, buffer.length, packet.getAddress(), packet.getPort());
