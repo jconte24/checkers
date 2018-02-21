@@ -1,13 +1,14 @@
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.io.*;
 import java.net.*;
 
 /**
 *This is the hub of the networking module for the LSDJ Checkers project
-*@version 1
+*@version 2
 *@author Dan Martineau
 */
-public class TransmitData extends Thread
+public class TransmitData //extends Thread
 {
 
 	//Fields
@@ -47,66 +48,93 @@ public class TransmitData extends Thread
 		oppID = null;
 		engaged = false;
 		joinServer();
-		start();
+		//start();
+		run();
 	}
 
 	/**
 	*Inherits from Thread class
 	*Will send and recieve data from the server
 	*/
-	@Override
-	public void run()
+	//@Override
+	protected void run()
 	{
-		while(true)
-		{	
+		//for(;;)
+		//{
 			try
 			{
+				long startTime;
+				int count = 0;
+				boolean action = false;		//wheter or not data was recieved or sent during this itteration
+				
 				String hold = "";
 				String message = "";
-
-				if(outgoing.getLength() > 0)
-				{	
-					hold = outgoing.deque();
-					buffer = hold.getBytes();
-					packet = new DatagramPacket(buffer, buffer.length, ip, PORT);
-					sock.send(packet);
+				
+				//There may be times when there's nothing to send or recieve, so this loop prevents getting hung up on receiving.
+				startTime = System.currentTimeMillis();
+				while(count == 0 && (System.currentTimeMillis() - startTime) < 1250)
+				{
+					if(outgoing.getLength() > 0)
+					{
+						hold = outgoing.deque();
+						//System.out.println("Message being sent: " + hold);
+						buffer = hold.getBytes();
+						packet = new DatagramPacket(buffer, buffer.length, ip, PORT);
+						sock.send(packet);
+						
+						action = true;
+					}
 					
-
-					/*//Terminate program if termStr is sent
-					if(hold.equals(termStr));
-						System.exit(0);*/
+					count++;
 				}
+				
+				//reset count
+				count = 0;
 
 				//There may be times when there's nothing to send or recieve, so this loop prevents getting hung up on receiving.
-				long startTime = System.currentTimeMillis(); //fetch starting time
-				int count = 0;
+				startTime = System.currentTimeMillis();
 				while(count == 0 && (System.currentTimeMillis() - startTime) < 1250)
 				{
 					buffer2 = new byte[512];
 					packet = new DatagramPacket(buffer2, buffer2.length);
 					sock.receive(packet);
-
+					
 					message = new String(packet.getData(), 0, packet.getLength());
+					//System.out.println("Message received: " + message);
+					
+					action = true;
 
 					count++;
 				}
 				
-				//send new opponent string into gotNewOpponent method or enque message if it is not a newOppStr
-				/*if(hold.equals(newOppStr))
-					gotNewOpponent(message);
-				else*/
-					incoming.enque(message);
+				//ensure that there was sending/recieving of data. Otherwise, a bunch of junk will get enqued
+				if(action)
+				{
+					//send new opponent string into gotNewOpponent method
+					if(message.equals(newOppStr) || (message.substring(6,7).equals("o") && message.substring(8,9).equals("t")))
+						gotNewOpponent(message);
+					//if the other opponent disconnects
+					else if((message.substring(6,7)).equals("d"))
+						lostOpponent();
 					
-				//if(((incoming.peek()).substring(6,7)).equals("i"))
-					myID = (incoming.peek()).substring(2,5);
+					//enque the message
+					if(!message.equals(""))
+						incoming.enque(message);
+
+					if(message.length() > 4 && (message.substring(6,7)).equals("i"))
+						myID = message.substring(2,5);
+					
+					//Update Strings for username change--must be here after myID update
+					updateStrings();
+				}
 			}
 
 			catch(IOException e)
 			{
 				System.out.println(e);
 			}
-				
-		}
+
+		//}
 	}
 
 	/*-----------------------------------------------Queue-mutating Methods-----------------------------------------------*/
@@ -130,6 +158,7 @@ public class TransmitData extends Thread
 	protected void sendData(String command)
 	{
 		outgoing.enque(command);
+		run();
 	}
 
 	/**
@@ -137,8 +166,8 @@ public class TransmitData extends Thread
 	*/
 	protected void opponentStatus()
 	{
-		System.out.println(oppStatStr);
 		outgoing.enque(oppStatStr);
+		run();
 	}
 
 	/**
@@ -147,6 +176,7 @@ public class TransmitData extends Thread
 	protected void newOpponent()
 	{
 		outgoing.enque(newOppStr);
+		run();
 	}
 
 	/**
@@ -155,10 +185,11 @@ public class TransmitData extends Thread
 	protected void terminateConn()
 	{
 		outgoing.enque(termStr);
+		run();
 	}
 
 	/**
-	*Will return true if player has opponent
+	*Will return true if player has opponent (this just returns a boolean instead of the id)
 	*@return true or false
 	*/
 	protected boolean engagementStatus()
@@ -174,10 +205,29 @@ public class TransmitData extends Thread
 	{
 		return oppID;
 	}
+	
+	/**
+	*Method returns player's id
+	*@return myID
+	*/
+	protected String getMyID()
+	{
+		return myID;
+	}
 
-	//PRIVATE METHODS
+	//==============================PRIVATE METHODS===============================================
 
-
+	/**
+	*Method will update Strings when the default username is changed
+	*This is done because Strings are immutable and will not auto-update
+	*/
+	private void updateStrings()
+	{
+		joinStr = ("s " + myID + " n");			
+		oppStatStr = ("s " + myID + " o");		
+		newOppStr = ("s " + myID + " n");		
+		termStr = ("s " + myID + " t");			
+	}
 
 	/**
 	*Requests to join server
