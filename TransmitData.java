@@ -1,5 +1,4 @@
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.io.*;
 import java.net.*;
 
@@ -57,84 +56,84 @@ public class TransmitData //extends Thread
 	*Will send and recieve data from the server
 	*/
 	//@Override
-	protected void run()
+	private void run()
 	{
-		//for(;;)
-		//{
+
+		try
+		{
+			long startTime;
+			boolean action = false;		//wheter or not data was recieved or sent during this itteration
+			Timer timer = new Timer();
+
+			String hold = "";
+			String message = "";
+
+			//There may be times when there's nothing to send or recieve, so this timer prevents getting hung up on receiving.
+			sock.setSoTimeout(1500);
 			try
 			{
-				long startTime;
-				int count = 0;
-				boolean action = false;		//wheter or not data was recieved or sent during this itteration
-				
-				String hold = "";
-				String message = "";
-				
-				//There may be times when there's nothing to send or recieve, so this loop prevents getting hung up on receiving.
-				startTime = System.currentTimeMillis();
-				while(count == 0 && (System.currentTimeMillis() - startTime) < 1250)
+				if(outgoing.getLength() > 0)
 				{
-					if(outgoing.getLength() > 0)
-					{
-						hold = outgoing.deque();
-						//System.out.println("Message being sent: " + hold);
-						buffer = hold.getBytes();
-						packet = new DatagramPacket(buffer, buffer.length, ip, PORT);
-						sock.send(packet);
-						
-						action = true;
-					}
-					
-					count++;
-				}
-				
-				//reset count
-				count = 0;
+					hold = outgoing.deque();
+					//System.out.println("Message being sent: " + hold);
+					buffer = hold.getBytes();
+					packet = new DatagramPacket(buffer, buffer.length, ip, PORT);
+					sock.send(packet);
 
-				//There may be times when there's nothing to send or recieve, so this loop prevents getting hung up on receiving.
-				startTime = System.currentTimeMillis();
-				while(count == 0 && (System.currentTimeMillis() - startTime) < 1250)
-				{
-					buffer2 = new byte[512];
-					packet = new DatagramPacket(buffer2, buffer2.length);
-					sock.receive(packet);
-					
-					message = new String(packet.getData(), 0, packet.getLength());
-					//System.out.println("Message received: " + message);
-					
 					action = true;
-
-					count++;
-				}
-				
-				//ensure that there was sending/recieving of data. Otherwise, a bunch of junk will get enqued
-				if(action)
-				{
-					//send new opponent string into gotNewOpponent method
-					if(message.equals(newOppStr) || (message.substring(6,7).equals("o") && message.substring(8,9).equals("t")))
-						gotNewOpponent(message);
-					//if the other opponent disconnects
-					else if((message.substring(6,7)).equals("d"))
-						lostOpponent();
-					
-					//enque the message
-					if(!message.equals(""))
-						incoming.enque(message);
-
-					if(message.length() > 4 && (message.substring(6,7)).equals("i"))
-						myID = message.substring(2,5);
-					
-					//Update Strings for username change--must be here after myID update
-					updateStrings();
 				}
 			}
-
-			catch(IOException e)
+			catch(SocketTimeoutException e)
 			{
-				System.out.println(e);
+				action = false;
 			}
 
-		//}
+
+			//There may be times when there's nothing to send or recieve, so this timer prevents getting hung up on receiving.
+			sock.setSoTimeout(1500);
+			try
+			{
+				buffer2 = new byte[512];
+				packet = new DatagramPacket(buffer2, buffer2.length);
+				sock.receive(packet);
+
+				message = new String(packet.getData(), 0, packet.getLength());
+				//System.out.println("Message received: " + message);
+
+				action = true;
+			}
+			catch(SocketTimeoutException e)
+			{
+				action = false;
+			}
+
+
+			//ensure that there was sending/recieving of data. Otherwise, a bunch of junk will get enqued
+			if(action)
+			{
+				//send new opponent string into gotNewOpponent method
+				if(message.equals(newOppStr) || (message.substring(6,7).equals("o") && message.substring(8,9).equals("t")))
+					gotNewOpponent(message);
+				//if the other opponent disconnects
+				else if((message.substring(6,7)).equals("d"))
+					lostOpponent();
+
+				//enque the message
+				if(!message.equals(""))
+					incoming.enque(message);
+
+				if(message.length() > 4 && (message.substring(6,7)).equals("i"))
+					myID = message.substring(2,5);
+
+				//Update Strings for username change--must be here after myID update
+				updateStrings();
+			}
+		}
+
+		catch(IOException e)
+		{
+			System.out.println(e);
+		}
 	}
 
 	/*-----------------------------------------------Queue-mutating Methods-----------------------------------------------*/
@@ -205,7 +204,7 @@ public class TransmitData //extends Thread
 	{
 		return oppID;
 	}
-	
+
 	/**
 	*Method returns player's id
 	*@return myID
@@ -223,10 +222,10 @@ public class TransmitData //extends Thread
 	*/
 	private void updateStrings()
 	{
-		joinStr = ("s " + myID + " n");			
-		oppStatStr = ("s " + myID + " o");		
-		newOppStr = ("s " + myID + " n");		
-		termStr = ("s " + myID + " t");			
+		joinStr = ("s " + myID + " n");
+		oppStatStr = ("s " + myID + " o");
+		newOppStr = ("s " + myID + " n");
+		termStr = ("s " + myID + " t");
 	}
 
 	/**
