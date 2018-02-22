@@ -28,6 +28,7 @@ public class TestClient
 		
 		//get initialization status
 		String hold = player.getData();
+		System.out.println(hold);
 		if((hold.substring(6,7)).equals("i"))
 			System.out.println("You are connected to the server with the id: " + hold.substring(2,5));
 		
@@ -42,23 +43,29 @@ public class TestClient
 		while(!choice.equals("d") && !choice.equals("D"))
 		{
 			System.out.print("\n\nWhat would y'all like to do next?\n");
-			System.out.print("a) Get opponent status\nb) Get a new opponent\nc) Send message to thine opponent\nd) terminate connection\nChoice: ");
+			System.out.print("a) Get opponent status\nb) Get a new opponent\nc) Send message to thine opponent\nd) Terminate connection\ne) See if there are any messages in your queue\nChoice: ");
 			choice = kbd.nextLine();
 			
 			if(choice.equals("a") || choice.equals("A"))
 			{
+				decode(player.getData());
+				
 				//get opponent status
 				player.opponentStatus();
 				decode(player.getData());
 			}
 			else if(choice.equals("b") || choice.equals("B"))
 			{
+				decode(player.getData());
+				
 				//get new opponent 
 				player.newOpponent();
 				decode(player.getData());
 			}
 			else if(choice.equals("c") || choice.equals("C"))
 			{	
+				decode(player.getData());
+				
 				if(!engaged)
 				{
 					System.out.println("You have no opponent to send to!\n");
@@ -78,6 +85,10 @@ public class TestClient
 				//terminate connection
 				player.terminateConn();
 				System.out.println("Connection Terminated.\n");
+			}
+			else if(choice.equals("e") || choice.equals("E"))
+			{
+				decode(player.getData());
 			}
 			else
 				System.out.println("WTF, learn how to type!\n");

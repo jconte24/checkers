@@ -15,17 +15,16 @@ public class GameServer extends Thread
 	protected DatagramSocket sock = null;
 	private final int PORT = 4444;
 	private ArrayList<Node> clients;
-	
+
 	/**
 	*Constructor
 	*/
 	public GameServer() throws IOException
 	{
 		clients = new ArrayList<Node>(10);
-		//ipList = new ArrayList<String>(5);
 		sock = new DatagramSocket(PORT);
 	}
-	
+
 	public static void main(String[] args) throws Exception
 	{
 		GameServer server = new GameServer();
@@ -121,18 +120,20 @@ public class GameServer extends Thread
 		//if client requests new opponent
 		else if(data.substring(6,7).equals("n"))
 		{
-			String newOpp = null;
+			String newOppID = null;
+			Node newOpp = null;
 			int count = 1;
 
-			newOpp = findOpp(id);
-			
+			newOppID = findOpp(id);
+			newOpp = getNode(newOppID);
+
 			if(newOpp != null)
 			{
 				node = getNode(id);
-				enqueStr = "c " + id + " n t " + node.getOppID();
+				enqueStr = "c " + id + " n t " + newOpp.getMyID();
 				(node.getMyQueue()).enque(enqueStr);
 
-				System.out.println("New opponent found: " + node.getOppID());
+				System.out.println("New opponent found: " + newOpp.getMyID());
 			}
 			else
 			{
@@ -145,19 +146,24 @@ public class GameServer extends Thread
 		else if(data.substring(6,7).equals("t"))
 		{
 			node = getNode(id);
-			
+
+			//set node as inactive
+			node.setActiveStatus(false);
+
+			//set opponent's node so that current node to be terminated is no longer its opponent
 			Node oppNode = getNode(node.getOppID());
 			if(node.getOppID() != null)
 			{
-				oppNode.removeOpp(); 												//set opponent's node so that current node to be terminated is no longer its opponent
-				(oppNode.getMyQueue()).enque("c " + oppNode.getMyID() + " d");		//enque disconnection message into opponent's queue
-			}
+				oppNode.removeOpp();
 
-			clients.remove(node);
+				//enque disconnection message into opponent's queue
+				(oppNode.getMyQueue()).enque("c " + oppNode.getMyID() + " d");
+			}
 
 			System.out.println("Player " + id + " has terminated connection with server.");
 
-			node = null;
+			//we can't set node to null beucase we want to preserve its data, so we will return null here.
+			return null;
 		}
 		else
 		{
@@ -211,36 +217,68 @@ public class GameServer extends Thread
 	*/
 	private String newPlayer(DatagramPacket myPack)
 	{
-		String myID = nextID();
+		String myID = "";
+		String oppID = "";
+		Queue myQueue;
 		Node node = null;
-		int i = clients.size();
+		boolean found = false;
+		int i = 0;
 
-		//create new data queue for player
-		Queue myQueue = new Queue();
-
-		//find opponent
-		String oppID = findOpp(myID);
-
-		//if there are no opponents
-		if(oppID==null)
-			node = new Node(myID, myPack, myQueue, null);
-		//assign opponent to new player
-		else
+		//recycle old id and index if there are any
+		for(int j = 0; j < clients.size(); j++)
 		{
-			Node holder = getNode(oppID);
-
-			if(holder != null)
+			if(!found && (clients.get(j).getActiveStatus())==false)
 			{
-				node = new Node(myID, myPack, myQueue, oppID);
-			}
-			else
-			{
-				System.out.println("An opponent was found, but was null...that's weird. Gonna have to blow up the server.");
-				System.exit(0);
+				node = clients.get(j);
+				found = true;
+				i = j;
 			}
 		}
 
-		clients.add(i, node);
+		//if an inactive node has been recycled
+		if(found)
+		{
+			//find the recycled id
+			myID = node.getMyID();
+
+			//reset node as active
+			node.setActiveStatus(true);
+
+			//create new data queue for player
+			myQueue = new Queue();
+
+			//find opponent
+			oppID = findOpp(myID);
+
+			//if new opponent was found, assign opponent to new player
+			if(oppID==null)
+				node = new Node(myID, myPack, myQueue, null);
+			else
+				node = new Node(myID, myPack, myQueue, oppID);
+
+			//replace node with new node
+			clients.set(i, node);
+		}
+		else
+		{
+			//get new id
+			myID = nextID();
+
+			//create new data queue for player
+			myQueue = new Queue();
+
+			//find opponent
+			oppID = findOpp(myID);
+
+			//if there are no opponents
+			if(oppID==null)
+				node = new Node(myID, myPack, myQueue, null);
+			//assign opponent to new player
+			else
+				node = new Node(myID, myPack, myQueue, oppID);
+
+			clients.add(i, node);
+		}
 
 		return myID;
 	}
@@ -272,17 +310,19 @@ public class GameServer extends Thread
 	private String findOpp(String playerID)
 	{
 		String id = null;;
+		boolean found = false;
 
-		if(clients.size() >= 1)
+		if(clients.size() > 1)
 		{
 			for(int i = 0; i < clients.size(); i++)
 			{
-				if(clients.get(i).getOppID()==null && (!(clients.get(i).getMyID().equals(playerID))))
+				if(!found && clients.get(i).getActiveStatus()==true && clients.get(i).getOppID()==null && (!(clients.get(i).getMyID().equals(playerID))))
 				{
 					//get id of new opponent
 					id = clients.get(i).getMyID();
 					//set current player as opponent of the new opponent
 					clients.get(i).setOppID(playerID);
+					found = true;
 				}
 			}
 		}
@@ -352,7 +392,7 @@ public class GameServer extends Thread
 		for(;;)
 		{
 			try
-			{	
+			{
 				//buffer for message
 				byte[] buffer = new byte[512];
 
@@ -369,14 +409,15 @@ public class GameServer extends Thread
 				Node currNode = decode(packet, message);
 
 				//send data to current node if there is data in its queue
-				if((!(currNode==null)) && currNode.getMyQueue().getLength() > 0)
+				//make sure that the node isn't null or empty
+				if((!(currNode==null)) && (!(currNode.getMyID().equals("xxx"))) && currNode.getMyQueue().getLength() > 0)
 				{
 					//retrives outgoing data and converts it to bytes
 					buffer = (currNode.getMyQueue().deque()).getBytes();
 
 					packet = currNode.getMyPack();
 					packet = new DatagramPacket(buffer, buffer.length, packet.getAddress(), packet.getPort());
-					
+
 					sock.send(packet);
 					System.out.println("Packet sent to: " + packet.getAddress());
 				}
