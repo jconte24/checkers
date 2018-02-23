@@ -4,7 +4,7 @@ import java.net.*;
 
 /**
 *This is the hub of the networking module for the LSDJ Checkers project
-*@version 2
+*@version 2.1
 *@author Dan Martineau
 */
 public class TransmitData //extends Thread
@@ -69,7 +69,7 @@ public class TransmitData //extends Thread
 			String message = "";
 
 			//There may be times when there's nothing to send or recieve, so this timer prevents getting hung up on receiving.
-			sock.setSoTimeout(1500);
+			sock.setSoTimeout(750);
 			try
 			{
 				if(outgoing.getLength() > 0)
@@ -90,7 +90,7 @@ public class TransmitData //extends Thread
 
 
 			//There may be times when there's nothing to send or recieve, so this timer prevents getting hung up on receiving.
-			sock.setSoTimeout(1500);
+			sock.setSoTimeout(750);
 			try
 			{
 				buffer2 = new byte[512];
@@ -98,7 +98,6 @@ public class TransmitData //extends Thread
 				sock.receive(packet);
 
 				message = new String(packet.getData(), 0, packet.getLength());
-				//System.out.println("Message received: " + message);
 
 				action = true;
 			}
@@ -119,7 +118,7 @@ public class TransmitData //extends Thread
 					lostOpponent();
 
 				//enque the message
-				if(!message.equals(""))
+				if(!(message.equals("")) && !(message.equals(null)) && !(message.length() < 5))
 					incoming.enque(message);
 
 				if(message.length() > 4 && (message.substring(6,7)).equals("i"))
@@ -147,6 +146,14 @@ public class TransmitData //extends Thread
 	*/
 	protected String getData()
 	{
+		//if the incoming queue is empty
+		if(incoming.getLength()==0)
+		{
+			//send fetch string to retrive any additional data from server
+			sendData("s " + myID + " f");
+		}
+
+		run();
 		return incoming.deque();
 	}
 

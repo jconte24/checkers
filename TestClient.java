@@ -4,7 +4,7 @@ import java.util.Scanner;
 *YOU MUST START SERVER BEFORE ENTERING DHCP!
 *Class is a test application for TransmitData--it works well, but there is a bug for option "c." (Sending instance gets hung up)
 
-@version 1.1
+@version 2
 @author Dan Martineau
 */
 public class TestClient
@@ -14,30 +14,29 @@ public class TestClient
 	private static String oppID = null;
 	private static String myID = null;
 	private static boolean engaged = false;
-	
+
 	public static void main(String[] args) throws Exception
 	{
 		kbd = new Scanner(System.in);
-		
+
 		System.out.print("Enter DHCP address of server: ");
 		String ip = kbd.nextLine();
-		
+
 		//create new instance of player
 		player = new TransmitData(ip);
-		
-		
+
+
 		//get initialization status
 		String hold = player.getData();
-		System.out.println(hold);
 		if((hold.substring(6,7)).equals("i"))
 			System.out.println("You are connected to the server with the id: " + hold.substring(2,5));
-		
+
 		//see if we have an opponent
 		player.opponentStatus();
 		decode(player.getData());
-		
-		
-		
+
+
+
 		//Let user control program
 		String choice = "";
 		while(!choice.equals("d") && !choice.equals("D"))
@@ -45,11 +44,11 @@ public class TestClient
 			System.out.print("\n\nWhat would y'all like to do next?\n");
 			System.out.print("a) Get opponent status\nb) Get a new opponent\nc) Send message to thine opponent\nd) Terminate connection\ne) See if there are any messages in your queue\nChoice: ");
 			choice = kbd.nextLine();
-			
+
 			if(choice.equals("a") || choice.equals("A"))
 			{
 				decode(player.getData());
-				
+
 				//get opponent status
 				player.opponentStatus();
 				decode(player.getData());
@@ -57,46 +56,46 @@ public class TestClient
 			else if(choice.equals("b") || choice.equals("B"))
 			{
 				decode(player.getData());
-				
-				//get new opponent 
+
+				//get new opponent
 				player.newOpponent();
 				decode(player.getData());
 			}
 			else if(choice.equals("c") || choice.equals("C"))
-			{	
+			{
 				decode(player.getData());
-				
+
 				if(!engaged)
 				{
-					System.out.println("You have no opponent to send to!\n");
+					System.out.println("\nYou have no opponent to send to!\n");
 				}
 				else
 				{
 					//Send opponent message
 					System.out.print("\nSend message: ");
 					String message = kbd.nextLine();
-					
+
 					player.sendData("c " + player.getMyID() + " c " + oppID + " " + message);
-					System.out.println("Message has been sent.\n");
+					System.out.println("\nMessage has been sent.\n");
 				}
 			}
 			else if(choice.equals("d") || choice.equals("D"))
-			{	
+			{
 				//terminate connection
 				player.terminateConn();
-				System.out.println("Connection Terminated.\n");
+				System.out.println("\nConnection Terminated.\n");
 			}
 			else if(choice.equals("e") || choice.equals("E"))
 			{
 				decode(player.getData());
 			}
 			else
-				System.out.println("WTF, learn how to type!\n");
+				System.out.println("\nWTF, learn how to type!\n");
 		}
-		
-		
+
+
 	}
-	
+
 	private static void decode(String data)
 	{
 		//ensure data was intended for client
@@ -115,7 +114,7 @@ public class TestClient
 			{
 				//player has recieved general data from opponent
 				System.out.println("\nMessage from opponent: " + data.substring(11));
-				
+
 				//message might be extraneous, so decode a second time to ensure decoding does not occur out of order
 				decode(player.getData());
 			}

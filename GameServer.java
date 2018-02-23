@@ -6,7 +6,7 @@ import java.net.*;
 /**
 *Class acts as a server for the checkers game. It allows players to communicate with each other.
 *Class inherits from Thread for the purpose of continually pulling and pushing data
-*@version 2
+*@version 2.1
 *@author Dan Martineau
 */
 public class GameServer extends Thread
@@ -165,6 +165,11 @@ public class GameServer extends Thread
 			//we can't set node to null beucase we want to preserve its data, so we will return null here.
 			return null;
 		}
+		else if(data.substring(6,7).equals("f"))
+		{
+			//set the current node so that any messages in its queue will be sent to client
+			node = getNode(id);
+		}
 		else
 		{
 			System.out.println("Error: Need to set rest of server decode operations.");
@@ -311,8 +316,7 @@ public class GameServer extends Thread
 	{
 		String id = null;;
 		boolean found = false;
-
-		if(clients.size() > 1)
+		if(clients.size() > 0)
 		{
 			for(int i = 0; i < clients.size(); i++)
 			{
@@ -323,6 +327,8 @@ public class GameServer extends Thread
 					//set current player as opponent of the new opponent
 					clients.get(i).setOppID(playerID);
 					found = true;
+					//send new opponent string to opponent
+					clients.get(i).getMyQueue().enque("c " + id + " o t " + playerID);
 				}
 			}
 		}
