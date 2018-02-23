@@ -13,6 +13,7 @@ import java.net.*;
 	private Queue myQueue;			//player's data queue
 	private String oppID;			//opponent's id
     private DatagramPacket myPack;	//Datagram packet last sent from this client
+	private boolean active;			//true if the node is active, false if node has left the server and is waiting to be recycled
 
 
 	/**
@@ -29,7 +30,7 @@ import java.net.*;
 		this.myPort = myPort;
 		this.myQueue = myQueue;
 		this.oppID = oppID;
-		//this.oppIP = oppIP;
+		active = true;
 	}
 
 	/**
@@ -47,6 +48,7 @@ import java.net.*;
 		this.myPort = myPack.getPort();
 		this.myQueue = myQueue;
 		this.oppID = oppID;
+		active = true;
 	}
 
 	/**
@@ -118,6 +120,24 @@ import java.net.*;
 	public void removeOpp()
 	{
 		oppID = null;
+	}
+
+	/**
+	*See if node is active.
+	*@return true or false
+	*/
+	public boolean getActiveStatus()
+	{
+		return active;
+	}
+
+	/**
+	*Set node to active/inactive
+	*@param active status
+	*/
+	public void setActiveStatus(boolean status)
+	{
+		active = status;
 	}
  }
 
