@@ -55,7 +55,7 @@ public class MoveVerifier
 	{
 		boolean jump = false;
 		
-		if(playableSquare(currA, currB) && board[currA][currB] == 0)
+		if(playableSquare(currA, currB) && board[currA][currB] == 0 && board[prevA][prevB] == 1)
 		{
 			if(currA==prevA+2)
 			{
@@ -78,6 +78,48 @@ public class MoveVerifier
 			}
 			
 			else if(currA==prevA-2 && king)
+			{
+				if(currB==prevB+2)
+				{
+					if(board[currA-1][currB+1]==2)
+					{
+						board[currA-1][currB+1] = 0;
+						jump = true;
+					}
+				}
+				else if(currB==prevB-2)
+				{
+					if(board[currA-1][currB-1]==2)
+					{
+						board[currA-1][currB-1] = 0;
+						jump = true;
+					}
+				}
+			}
+		}
+		else if(playableSquare(currA, currB) && board[currA][currB] == 0 && board[prevA][prevB] == 2)
+		{
+			if(currA==prevA+2 && king)
+			{
+				if(currB==prevB+2)
+				{
+					if(board[currA+1][currB+1]==2)
+					{
+						board[currA+1][currB+1] = 0;
+						jump = true;
+					}
+				}	
+				else if(currB==prevB-2)
+				{
+					if(board[currA+1][currB-1]==2)
+					{
+						board[currA+1][currB-1] = 0;
+						jump = true;
+					}
+				}
+			}
+			
+			else if(currA==prevA-2)
 			{
 				if(currB==prevB+2)
 				{
@@ -159,17 +201,19 @@ public class MoveVerifier
 	{
 		boolean valid = true;
 		
-		//check to make sure piece belongs to player
-		if(board[prevA][prevB]!=1)
-			valid = false;
-		
-		if(!(playableSquare(currA, currB)))
-			valid = false;
-		
-		if(!(diagonal(prevA, prevB, currA, currB, king)))
-			valid = false;
-		
-		if(taken(currA, currB)==true)
+		//check to see if piece belongs to player or opponent
+		if(board[prevA][prevB]==1 || board[prevA][prevB]==2)
+		{
+			if(!(playableSquare(currA, currB)))
+				valid = false;
+			
+			if(!(diagonal(prevA, prevB, currA, currB, king)))
+				valid = false;
+			
+			if(taken(currA, currB)==true)
+				valid = false;
+		}
+		else
 			valid = false;
 		
 		return valid;
