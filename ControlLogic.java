@@ -7,7 +7,6 @@ public class ControlLogic
 {
 
 	/*FIELDS*/
-	private String ip;				//DHCP of server
 	private Checker[][] board; 		//board array object
 	private MoveVerifier mover;		//instance of move verifier
 	private boolean mustJump;		//whether or not a player must make a jump
@@ -19,8 +18,6 @@ public class ControlLogic
 	*/
 	public ControlLogic()
 	{
-		this.ip = ip;
-
 		board = new Checker[8][8];
 		mover = new MoveVerifier();
 
