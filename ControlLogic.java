@@ -12,11 +12,12 @@ public class ControlLogic
 	private boolean mustJump;		//whether or not a player must make a jump
 	private int myScore;			//player's score
 	private int pieces;				//number of pieces player has on board. Should be 12 to start.
+	private boolean myTurn;			//whether or not it is player's turn
 
 	/**
 	*Constructor--No args
 	*/
-	public ControlLogic()
+	public ControlLogic(boolean myTurn)
 	{
 		board = new Checker[8][8];
 		mover = new MoveVerifier();
@@ -24,6 +25,7 @@ public class ControlLogic
 		mustJump = false;
 		myScore = 0;
 		pieces = 12;
+		this.myTurn = myTurn;
 
 		initializeBoard();
 	}
@@ -41,81 +43,131 @@ public class ControlLogic
 		boolean move = false;
 		boolean king  = false;
 		
-		//if the piece belongs to this player
-		if(board[prevA][prevB].getOwner())
+		if(board[prevA][prevB] != null)
 		{
-			if(board[prevA][prevB] != null)
+			//if the piece belongs to this player
+			if(board[prevA][prevB].getOwner())
+			{
 				king = board[prevA][prevB].getKing();
 
-			//test to see if the move to commit is a jump
-			if(mover.isJump(prevA, prevB, currA, currB, king))
-			{
-				//see if player can jump again
-				if(mover.otherJump(currA, currB))
+				//test to see if the move to commit is a jump
+				if(mover.isJump(prevA, prevB, currA, currB, king, false))
 				{
-					System.out.println("You must jump again.");
-					mustJump = true;
+					//see if player can jump again
+					/*if(mover.otherJump(currA, currB))
+					{
+						System.out.println("You must jump again.");
+						mustJump = true;
+					}
+					else
+					{*/
+						mustJump = false;
+						
+						//opponent's turn
+						myTurn = false;
+					//}
+
+					move = mover.move(prevA, prevB, currA, currB, king);
+
+					//commit move
+					board[currA][currB] = board[prevA][prevB];
+					board[prevA][prevB] = null;
+					
+					if(currA==prevA+2 && king)
+					{
+						if(currB==prevB+2)
+							board[prevA+1][prevB+1] = null;
+						else if(currB==prevB-2)
+							board[prevA+1][prevB-1] = null;
+					}
+					else if(currA==prevA-2)
+					{
+						if(currB==prevB+2)
+							board[prevA-1][prevB+1] = null;
+						else if(currB==prevB-2)
+							board[prevA-1][prevB-1] = null;
+					}
+
+					//add a point to score for jumping
+					myScore++;
 				}
 				else
-					mustJump = false;
-
-				//call VerifyMove to make sure move is valid
-				move = mover.move(prevA, prevB, currA, currB, king);
-
-				//if move is valid, commit it.
-				if(move)
 				{
-					board[currA][currB] = board[prevA][prevB];
-					board[prevA][prevB] = null;
-				}
+					//test to see if player must jump
+					if(mustJump)
+					{
+						System.out.println("You must jump your opponent's piece!");
+						return move;
+					}
 
-				//add a point to score for jumping
-				myScore++;
-			}
-			else
-			{
-				//test to see if player must jump
-				if(mustJump)
-				{
-					System.out.println("You must jump your opponent's piece!");
-					return move;
+					move = mover.move(prevA, prevB, currA, currB, king);
+					
+					//if move is valid, commit it.
+					if(move)
+					{
+						board[currA][currB] = board[prevA][prevB];
+						board[prevA][prevB] = null;
+						
+						//opponent's turn
+						myTurn = false;
+					}
 				}
-
-				move = mover.move(prevA, prevB, currA, currB, king);
 				
-				//if move is valid, commit it.
-				if(move)
-				{
-					board[currA][currB] = board[prevA][prevB];
-					board[prevA][prevB] = null;
-				}
-			}
-
-			//analyze status
-			status(prevA, prevB, currA, currB, board[prevA][prevB].getOwner());
-		}
-		
-		//if the piece belongs to the opponent
-		else
-		{
-			if(board[prevA][prevB] != null)
-				king = board[prevA][prevB].getKing();
-
-			move = mover.move(prevA, prevB, currA, currB, king);
-				
-			//if move is valid, commit it.
-			if(move)
-			{
-				board[currA][currB] = board[prevA][prevB];
-				board[prevA][prevB] = null;
-			}
-			else
-			{
-				System.out.println("Opponent tried to make an invalid move: be suspicious!");
+				//analyze status
+				if(board[currA][currB] != null)
+					status(prevA, prevB, currA, currB, board[currA][currB].getOwner());
 			}
 			
-			//analyze status
-			status(prevA, prevB, currA, currB, board[prevA][prevB].getOwner());
+			//if the piece belongs to the opponent
+			else
+			{
+				king = board[prevA][prevB].getKing();
+				
+				//test to see if the move to commit is a jump
+				if(mover.isJump(prevA, prevB, currA, currB, king, false))
+				{
+					move = mover.move(prevA, prevB, currA, currB, king);
+
+					//commit move
+					board[currA][currB] = board[prevA][prevB];
+					board[prevA][prevB] = null;
+					
+					if(currA==prevA+2)
+					{
+						if(currB==prevB+2)
+							board[prevA+1][prevB+1] = null;
+						else if(currB==prevB-2)
+							board[prevA+1][prevB-1] = null;
+					}
+					else if(currA==prevA-2 && king)
+					{
+						if(currB==prevB+2)
+							board[prevA-1][prevB+1] = null;
+						else if(currB==prevB-2)
+							board[prevA-1][prevB-1] = null;
+					}
+				}
+				
+				else
+				{
+					move = mover.move(prevA, prevB, currA, currB, king);
+						
+					//if move is valid, commit it.
+					if(move)
+					{
+						board[currA][currB] = board[prevA][prevB];
+						board[prevA][prevB] = null;
+					}
+					else
+					{
+						System.out.println("Opponent tried to make an invalid move: be suspicious!");
+					}
+					
+					//analyze status
+					if(board[currA][currB] != null)
+						status(prevA, prevB, currA, currB, board[currA][currB].getOwner());
+				}
+			}
 		}
 		
 		return move;
@@ -138,6 +190,15 @@ public class ControlLogic
 	{
 		return myScore;
 	}
+	
+	/**
+	*Method returns who's turn it is
+	*@return my turn or not
+	*/
+	protected boolean getMyTurn()
+	{
+		return myTurn;
+	}
 
 	/**
 	*Method will tell if player needs to make a jump
@@ -149,13 +210,24 @@ public class ControlLogic
 	}
 	
 	/**
+	*Method sets who's turn it is to player's turn
+	*/
+	protected void setMyTurn()
+	{
+		myTurn = true;
+	}
+	
+	/**
 	*Passthrough for isJump() in MoveVerifier()
 	*/
-	protected boolean isJump(byte prevA, byte prevB, byte currA, byte currB)
+	protected boolean isJump(byte prevA, byte prevB, byte currA, byte currB, boolean change)
 	{
-		boolean king = board[prevA][prevB].getKing();
+		boolean king = false;
 		
-		return mover.isJump(prevA, prevB, currA, currB, king);
+		if(board[prevA][prevB] != null)
+			king = board[prevA][prevB].getKing();
+		
+		return mover.isJump(prevA, prevB, currA, currB, king, change);
 	}
 
 	/**
@@ -184,11 +256,11 @@ public class ControlLogic
 	{
 		String output = null;
 		
-		if(input.length()==2)
+		if(input.length() <= 3)
 		{
 			output = getOppCoorHelper(input);
 		}
-		else if(input.length()==5)
+		else if(input.length() >= 5)
 		{
 			output = getOppCoorHelper(input.substring(0,2));
 			output += getOppCoorHelper(input.substring(3));
@@ -312,7 +384,7 @@ public class ControlLogic
 	}
 
 	//for testing purposes only
-	protected void printBoard()
+	public void printBoard()
 	{
 		for(byte i = 0; i < 8; i++)
 		{

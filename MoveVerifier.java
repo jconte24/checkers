@@ -1,7 +1,7 @@
 /**
 *This class will determine whether or not a move is valid
 *@author Dan Martineau
-*@version 1.0
+*@version 1.1
 */
 
 public class MoveVerifier
@@ -31,15 +31,23 @@ public class MoveVerifier
 		
 		//ensure move is valid
 		validMove = verifyMove(prevA, prevB, currA, currB, king);
-		jump = isJump(prevA, prevB, currA, currB, king);
+		jump = isJump(prevA, prevB, currA, currB, king, true);
 		
-		if(validMove || jump)
+		if(validMove)
 		{
 			board[currA][currB] = board[prevA][prevB];
 			board[prevA][prevB] = 0;
+			
+			return true;
 		}
-		
-		return validMove;
+		else if(jump)
+		{
+			board[currA][currB] = board[prevA][prevB];
+			board[prevA][prevB] = 0;
+			
+			return true;
+		}
+		return false;
 	}
 	
 	/**
@@ -49,71 +57,32 @@ public class MoveVerifier
 	*@param current row coordinate
 	*@param current coloumn coordinate
 	*@param whether or not piece is king
+	*@param true if method should alter, false if not
 	*@return true if move is a jump
 	*/
-	protected boolean isJump(byte prevA, byte prevB, byte currA, byte currB, boolean king)
+	protected boolean isJump(byte prevA, byte prevB, byte currA, byte currB, boolean king, boolean change)
 	{
 		boolean jump = false;
 		
 		if(playableSquare(currA, currB) && board[currA][currB] == 0 && board[prevA][prevB] == 1)
 		{
-			if(currA==prevA+2)
-			{
-				if(currB==prevB+2)
-				{
-					if(board[currA+1][currB+1]==2)
-					{
-						board[currA+1][currB+1] = 0;
-						jump = true;
-					}
-				}	
-				else if(currB==prevB-2)
-				{
-					if(board[currA+1][currB-1]==2)
-					{
-						board[currA+1][currB-1] = 0;
-						jump = true;
-					}
-				}
-			}
-			
-			else if(currA==prevA-2 && king)
-			{
-				if(currB==prevB+2)
-				{
-					if(board[currA-1][currB+1]==2)
-					{
-						board[currA-1][currB+1] = 0;
-						jump = true;
-					}
-				}
-				else if(currB==prevB-2)
-				{
-					if(board[currA-1][currB-1]==2)
-					{
-						board[currA-1][currB-1] = 0;
-						jump = true;
-					}
-				}
-			}
-		}
-		else if(playableSquare(currA, currB) && board[currA][currB] == 0 && board[prevA][prevB] == 2)
-		{
 			if(currA==prevA+2 && king)
 			{
 				if(currB==prevB+2)
 				{
-					if(board[currA+1][currB+1]==2)
+					if(board[prevA+1][prevB+1]==2)
 					{
-						board[currA+1][currB+1] = 0;
+						if(change)
+							board[prevA+1][prevB+1] = 0;
 						jump = true;
 					}
 				}	
 				else if(currB==prevB-2)
 				{
-					if(board[currA+1][currB-1]==2)
+					if(board[prevA+1][prevB-1]==2)
 					{
-						board[currA+1][currB-1] = 0;
+						if(change)
+							board[prevA+1][prevB-1] = 0;
 						jump = true;
 					}
 				}
@@ -123,17 +92,65 @@ public class MoveVerifier
 			{
 				if(currB==prevB+2)
 				{
-					if(board[currA-1][currB+1]==2)
+					if(board[prevA-1][prevB+1]==2)
 					{
-						board[currA-1][currB+1] = 0;
+						if(change)
+							board[prevA-1][prevB+1] = 0;
 						jump = true;
 					}
 				}
 				else if(currB==prevB-2)
 				{
-					if(board[currA-1][currB-1]==2)
+					if(board[prevA-1][prevB-1]==2)
 					{
-						board[currA-1][currB-1] = 0;
+						if(change)
+							board[prevA-1][prevB-1] = 0;
+						jump = true;
+					}
+				}
+			}
+		}
+		else if(playableSquare(currA, currB) && board[currA][currB] == 0 && board[prevA][prevB] == 2)
+		{
+			if(currA==prevA+2)
+			{
+				if(currB==prevB+2)
+				{
+					if(board[prevA+1][prevB+1]==1)
+					{
+						if(change)
+							board[prevA+1][prevB+1] = 0;
+						jump = true;
+					}
+				}	
+				else if(currB==prevB-2)
+				{
+					if(board[prevA+1][prevB-1]==1)
+					{
+						if(change)
+							board[prevA+1][prevB-1] = 0;
+						jump = true;
+					}
+				}
+			}
+			
+			else if(currA==prevA-2 && king)
+			{
+				if(currB==prevB+2)
+				{
+					if(board[prevA-1][prevB+1]==1)
+					{
+						if(change)
+							board[prevA-1][prevB+1] = 0;
+						jump = true;
+					}
+				}
+				else if(currB==prevB-2)
+				{
+					if(board[prevA-1][prevB-1]==1)
+					{
+						if(change)
+							board[prevA-1][prevB-1] = 0;
 						jump = true;
 					}
 				}
@@ -154,11 +171,11 @@ public class MoveVerifier
 		
 		if(board[currA+1][currB+1]==2 && playableSquare((byte)(currA+2), (byte)(currB+2)) && board[currA+2][currB+2] == 0)
 			jump = true;
-		else if(board[currA-1][currB-1]==2 && playableSquare((byte)(currA-2), (byte)(currB-2)) && board[currA-2][currB-2] == 0)
+		else if(board[currA+1][currB+1]==2 && playableSquare((byte)(currA-2), (byte)(currB+2)) && board[currA+2][currB+2] == 0)
+			jump = true;
+		else if(board[currA+1][currB-1]==2 && playableSquare((byte)(currA-2), (byte)(currB-2)) && board[currA+2][currB-2] == 0)
 			jump = true;
 		else if(board[currA-1][currB+1]==2 && playableSquare((byte)(currA-2), (byte)(currB+2)) && board[currA-2][currB+2] == 0)
-			jump = true;
-		else if(board[currA+1][currB-1]==2 && playableSquare((byte)(currA+2), (byte)(currB-2)) && board[currA+2][currB-2] == 0)
 			jump = true;
 		
 		return jump;
@@ -201,13 +218,25 @@ public class MoveVerifier
 	{
 		boolean valid = true;
 		
-		//check to see if piece belongs to player or opponent
-		if(board[prevA][prevB]==1 || board[prevA][prevB]==2)
+		//check to see if piece belongs to player
+		if(board[prevA][prevB]==1)
 		{
 			if(!(playableSquare(currA, currB)))
 				valid = false;
 			
-			if(!(diagonal(prevA, prevB, currA, currB, king)))
+			if(!(diagonal(prevA, prevB, currA, currB, king, true)))
+				valid = false;
+			
+			if(taken(currA, currB)==true)
+				valid = false;
+		}
+		//check to see if piece belongs to opponent
+		else if(board[prevA][prevB]==2)
+		{
+			if(!(playableSquare(currA, currB)))
+				valid = false;
+			
+			if(!(diagonal(prevA, prevB, currA, currB, king, false)))
 				valid = false;
 			
 			if(taken(currA, currB)==true)
@@ -228,32 +257,62 @@ public class MoveVerifier
 	*@param current row coordinate
 	*@param current coloumn coordinate
 	*@param true if piece is a king
+	*@param false if opponent or true if player
 	*@return true if diagonal
 	*/
-	private boolean diagonal(byte prevA, byte prevB, byte currA, byte currB, boolean king)
+	private boolean diagonal(byte prevA, byte prevB, byte currA, byte currB, boolean king, boolean player)
 	{
 		boolean diagonal = false;
 		
-		//up
-		if(currA==prevA + 1)
+		//player moves
+		if(player)
 		{
-			//left
-			if(currB==prevB - 1 && king)
-				diagonal = true;
-			//right
-			else if(currB==prevB + 1)
-				diagonal = true;
+			//down
+			if(currA==prevA + 1 && king)
+			{
+				//left
+				if(currB==prevB - 1)
+					diagonal = true;
+				//right
+				else if(currB==prevB + 1)
+					diagonal = true;
+			}
+			
+			//up
+			else if(currA==prevA - 1)
+			{
+				//left
+				if(currB==prevB - 1)
+					diagonal = true;
+				//right
+				else if(currB==prevB + 1)
+					diagonal = true;
+			}
 		}
-		
-		//down
-		else if(currA==prevA - 1)
+		//opponent moves
+		else
 		{
-			//left
-			if(currB==prevB - 1)
-				diagonal = true;
-			//right
-			else if(currB==prevB + 1)
-				diagonal = true;
+			//down
+			if(currA==prevA + 1)
+			{
+				//left
+				if(currB==prevB - 1)
+					diagonal = true;
+				//right
+				else if(currB==prevB + 1)
+					diagonal = true;
+			}
+			
+			//up
+			else if(currA==prevA - 1 && king)
+			{
+				//left
+				if(currB==prevB - 1)
+					diagonal = true;
+				//right
+				else if(currB==prevB + 1)
+					diagonal = true;
+			}
 		}
 		
 		return diagonal;
@@ -330,7 +389,7 @@ public class MoveVerifier
 	}
 	
 	//for testing purposes only
-	protected void printBoard()
+	public void printBoard()
 	{
 		for(byte i = 0; i < 8; i++)
 		{
