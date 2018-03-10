@@ -406,10 +406,12 @@ public class GameServer extends Thread
 				DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 				sock.receive(packet);
 
-				System.out.println("Packet recieved from: " + packet.getAddress());
-
 				//takes recieved packet, converts it back to a String.
 				String message = new String(packet.getData(), 0, packet.getLength());
+
+				if(!message.substring(6,7).equals("f"))
+					System.out.println("Packet recieved from: " + packet.getAddress());
+
 
 				//decode the packet and get the appropriate node to send data to
 				Node currNode = decode(packet, message);
@@ -426,9 +428,8 @@ public class GameServer extends Thread
 
 					sock.send(packet);
 					System.out.println("Packet sent to: " + packet.getAddress());
+					System.out.println();
 				}
-
-				System.out.println();
 			}
 
 			catch(IOException e)

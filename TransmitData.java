@@ -22,6 +22,8 @@ public class TransmitData //extends Thread
 	private InetAddress ip;					//dhcp of the server
 	private byte[] buffer;					//main buffer for the program
 	private byte[] buffer2;					//secondary buffer for the program
+	private boolean initialized = false;	//whether or not this instance has finished running through its constructor
+	private Timer timer;					//timer object for run method
 
 
 
@@ -42,13 +44,14 @@ public class TransmitData //extends Thread
 	{
 		sock = new DatagramSocket();
 		ip = InetAddress.getByName(dhcp);
+		timer = new Timer();
 		incoming = new Queue();
 		outgoing = new Queue();
 		oppID = null;
 		engaged = false;
 		joinServer();
-		//start();
-		run();
+		
+		initialized = true;
 	}
 
 	/**
@@ -63,13 +66,12 @@ public class TransmitData //extends Thread
 		{
 			long startTime;
 			boolean action = false;		//wheter or not data was recieved or sent during this itteration
-			Timer timer = new Timer();
 
 			String hold = "";
 			String message = "";
 
 			//There may be times when there's nothing to send or recieve, so this timer prevents getting hung up on receiving.
-			sock.setSoTimeout(750);
+			sock.setSoTimeout(350);
 			try
 			{
 				if(outgoing.getLength() > 0)
@@ -90,7 +92,7 @@ public class TransmitData //extends Thread
 
 
 			//There may be times when there's nothing to send or recieve, so this timer prevents getting hung up on receiving.
-			sock.setSoTimeout(750);
+			sock.setSoTimeout(350);
 			try
 			{
 				buffer2 = new byte[512];
@@ -156,6 +158,15 @@ public class TransmitData //extends Thread
 		run();
 		return incoming.deque();
 	}
+	
+	/**
+	*Tells whether or not this instance is initialized
+	*@return initialization status
+	*/
+	protected boolean initialized()
+	{
+		return initialized;
+	}
 
 	/**
 	*Sends data/commands to the opponent's instance
@@ -209,6 +220,9 @@ public class TransmitData //extends Thread
 	*/
 	protected String getOppID()
 	{
+		if(oppID==null)
+			opponentStatus();
+		
 		return oppID;
 	}
 
@@ -241,6 +255,9 @@ public class TransmitData //extends Thread
 	private void joinServer() throws Exception
 	{
 		outgoing.enque(joinStr);
+		run();
+		
+		updateStrings();
 	}
 
 	/**
@@ -250,7 +267,7 @@ public class TransmitData //extends Thread
 	private void gotNewOpponent(String data)
 	{
 		engaged = true;
-		oppID = data.substring(9,12);
+		oppID = data.substring(10,13);
 	}
 
 	/**
