@@ -38,7 +38,7 @@ public class FrontEndSimulator
 			System.out.print("\ndesired coloumn: ");
 			c2 = kbd.nextByte();
 			
-			moved = control.move(r1, r2, c1, c2);
+			moved = control.move(r1, r2, c1, c2, true);
 			
 			if(moved)
 			{

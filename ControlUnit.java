@@ -16,6 +16,7 @@ public class ControlUnit extends Thread
 	private boolean engaged;
 	private int myScore;
 	private boolean mustJump;
+	private String prevString;
 
 	/**
 	*Constructor
@@ -51,9 +52,10 @@ public class ControlUnit extends Thread
 	*@param previous coloumn coordinate
 	*@param current row coordinate
 	*@param current coloumn coordinate
+	*@param true if player's piece should be moved, false if opponent's piece should be moved
 	*@return true if piece was moved
 	*/
-	protected boolean move(byte prevA, byte prevB, byte currA, byte currB)
+	protected boolean move(byte prevA, byte prevB, byte currA, byte currB, boolean whom)
 	{
 		//don't allow a move if it's not player's turn--this is one reason not to use this method internally
 		if(!control.getMyTurn())
@@ -66,7 +68,7 @@ public class ControlUnit extends Thread
 		jump = control.isJump(prevA, prevB, currA, currB, false);
 
 		//move the piece
-		move = control.move(prevA, prevB, currA, currB);
+		move = control.move(prevA, prevB, currA, currB, whom);
 
 		//find out if player must jump again
 		mustJump = control.getJumpStatus();
@@ -125,7 +127,7 @@ public class ControlUnit extends Thread
 		{
 			try
 			{
-				//check for incoming data and decode it if there is any.
+				//check for incoming data 
 				hold = network.getData();
 			}
 			catch(Exception e)
@@ -133,9 +135,12 @@ public class ControlUnit extends Thread
 				System.out.println("There's been an exception recieving network data in ControlUnit.");
 			}
 			
-			//decode revieved String
-			if(hold != null)
+			//decode revieved String if it is not a repeat of a command
+			if(hold != null && (!hold.equals(prevString)))
+			{
+				prevString = hold;
 				decode(hold);
+			}
 			
 			//make sure we have opponent
 			network.engagementStatus();
@@ -177,7 +182,7 @@ public class ControlUnit extends Thread
 
 				if(data.substring(12,13).equals("m"))
 				{
-					control.move(r1, r2, c1, c2);
+					control.move(r1, r2, c1, c2, false);
 
 					//it's my turn again
 					control.setMyTurn();
@@ -186,14 +191,14 @@ public class ControlUnit extends Thread
 				{
 					if(data.substring(20).equals("t"))
 					{
-						control.move(r1, r2, c1, c2);
+						control.move(r1, r2, c1, c2, false);
 
 						//it's my turn again
 						control.setMyTurn();
 					}
 					else if(data.substring(20).equals("f"))
 					{
-						control.move(r1, r2, c1, c2);
+						control.move(r1, r2, c1, c2, false);
 					}
 				}
 				//REMOVE AFTER TEST STAGE

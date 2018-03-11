@@ -36,9 +36,10 @@ public class ControlLogic
 	*@param previous coloumn coordinate
 	*@param current row coordinate
 	*@param current coloumn coordinate
+	*@param true if player's piece should be moved, false if opponent's piece should be moved
 	*@return true if piece was moved
 	*/
-	protected boolean move(byte prevA, byte prevB, byte currA, byte currB)
+	protected boolean move(byte prevA, byte prevB, byte currA, byte currB, boolean whom)
 	{
 		boolean move = false;
 		boolean king  = false;
@@ -46,30 +47,17 @@ public class ControlLogic
 		if(board[prevA][prevB] != null)
 		{
 			//if the piece belongs to this player
-			if(board[prevA][prevB].getOwner())
+			if(board[prevA][prevB].getOwner() && whom)
 			{
 				king = board[prevA][prevB].getKing();
 
 				//test to see if the move to commit is a jump
 				if(mover.isJump(prevA, prevB, currA, currB, king, false))
 				{
-					//see if player can jump again
-					/*if(mover.otherJump(currA, currB))
-					{
-						System.out.println("You must jump again.");
-						mustJump = true;
-					}
-					else
-					{*/
-						mustJump = false;
-						
-						//opponent's turn
-						myTurn = false;
-					//}
-
+					//move piece in MoveVerifier()
 					move = mover.move(prevA, prevB, currA, currB, king);
 
-					//commit move
+					//commit move on this board
 					board[currA][currB] = board[prevA][prevB];
 					board[prevA][prevB] = null;
 					
@@ -86,6 +74,21 @@ public class ControlLogic
 							board[prevA-1][prevB+1] = null;
 						else if(currB==prevB-2)
 							board[prevA-1][prevB-1] = null;
+					}
+					
+					
+					//see if player can jump again
+					if(mover.otherJump(currA, currB, king))
+					{
+						System.out.println("You must jump again.");
+						mustJump = true;
+					}
+					else
+					{
+						mustJump = false;
+						
+						//opponent's turn
+						myTurn = false;
 					}
 
 					//add a point to score for jumping
@@ -119,7 +122,7 @@ public class ControlLogic
 			}
 			
 			//if the piece belongs to the opponent
-			else
+			else if(!board[prevA][prevB].getOwner() && !whom)
 			{
 				king = board[prevA][prevB].getKing();
 				
@@ -386,6 +389,7 @@ public class ControlLogic
 	//for testing purposes only
 	public void printBoard()
 	{
+		System.out.println();
 		for(byte i = 0; i < 8; i++)
 		{
 			for(byte j = 0; j < 8; j++)

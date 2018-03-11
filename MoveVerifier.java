@@ -163,19 +163,20 @@ public class MoveVerifier
 	*Will see if there is an additional jump
 	*@param current row coordinate
 	*@param current coloumn coordinate
+	*@param whether or not piece is king
 	*@return true if there is another jump
 	*/
-	protected boolean otherJump(byte currA, byte currB)
+	protected boolean otherJump(byte currA, byte currB, boolean king)
 	{
 		boolean jump = false;
 		
-		if(board[currA+1][currB+1]==2 && playableSquare((byte)(currA+2), (byte)(currB+2)) && board[currA+2][currB+2] == 0)
+		if(currA<6 && currB<6 && board[currA+1][currB+1]==2 && playableSquare((byte)(currA+2), (byte)(currB+2)) && board[currA+2][currB+2] == 0 && king)
 			jump = true;
-		else if(board[currA+1][currB+1]==2 && playableSquare((byte)(currA-2), (byte)(currB+2)) && board[currA+2][currB+2] == 0)
+		else if(currA<6 && currB>1 && board[currA+1][currB-1]==2 && playableSquare((byte)(currA+2), (byte)(currB-2)) && board[currA+2][currB-2] == 0 && king)
 			jump = true;
-		else if(board[currA+1][currB-1]==2 && playableSquare((byte)(currA-2), (byte)(currB-2)) && board[currA+2][currB-2] == 0)
+		else if(currA>1 && currB>1 && board[currA-1][currB-1]==2 && playableSquare((byte)(currA-2), (byte)(currB-2)) && board[currA-2][currB-2] == 0)
 			jump = true;
-		else if(board[currA-1][currB+1]==2 && playableSquare((byte)(currA-2), (byte)(currB+2)) && board[currA-2][currB+2] == 0)
+		else if(currA>1 && currB<6 && board[currA-1][currB+1]==2 && playableSquare((byte)(currA-2), (byte)(currB+2)) && board[currA-2][currB+2] == 0)
 			jump = true;
 		
 		return jump;
