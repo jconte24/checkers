@@ -1,10 +1,8 @@
 /**
 *This class is the main class in the back end of the checkers game. It Implements ControlLogic and TransmitData. It also inherits from Thread.
-*@version 1.0
+*@version 1.1
 *@author Dan Martineau
 */
-
-import java.util.concurrent.TimeUnit;
 
 public class ControlUnit extends Thread
 {
@@ -27,7 +25,7 @@ public class ControlUnit extends Thread
 		network = new TransmitData(ip);
 		myScore = 0;
 		mustJump = false;
-		
+
 		//makes sure that TransmitData is fully initialized so that our data will be accurate
 		do
 		{
@@ -35,13 +33,13 @@ public class ControlUnit extends Thread
 			oppID = network.getOppID();
 			engaged = network.engagementStatus();
 		}while(!network.initialized());
-		
+
 		//decide who begins
 		if(oppID == null || Integer.parseInt(network.getMyID()) < Integer.parseInt(network.getOppID()))
 			control = new ControlLogic(true);
 		else
 			control = new ControlLogic(false);
-		
+
 		//begin thread
 		start();
 	}
@@ -127,21 +125,22 @@ public class ControlUnit extends Thread
 		{
 			try
 			{
-				//check for incoming data 
+				//check for incoming data
 				hold = network.getData();
 			}
 			catch(Exception e)
 			{
-				System.out.println("There's been an exception recieving network data in ControlUnit.");
+				System.out.println("There's been an exception recieving network data in ControlUnit: " + e);
+				System.exit(0);
 			}
-			
+
 			//decode revieved String if it is not a repeat of a command
 			if(hold != null && (!hold.equals(prevString)))
 			{
 				prevString = hold;
 				decode(hold);
 			}
-			
+
 			//make sure we have opponent
 			network.engagementStatus();
 
@@ -155,7 +154,7 @@ public class ControlUnit extends Thread
 	*@param recieved String
 	*/
 	private void decode(String data)
-	{	
+	{
 		//ensure data was intended for client
 		if(data==null || data.length() < 6 || !(data.substring(0,1).equals("c")))
 			return;
