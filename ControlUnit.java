@@ -83,6 +83,13 @@ public class ControlUnit extends Thread
 			network.sendData("c " + myID + " c " + oppID + " j " + control.getOppCoordinates(prev) + " " + control.getOppCoordinates(curr) + " t");
 		else if(move && !jump)
 			network.sendData("c " + myID + " c " + oppID + " m " + control.getOppCoordinates(prev) + " " + control.getOppCoordinates(curr));
+		
+		//see if there are anhy moves left
+		if(!control.movesLeft())
+		{
+			System.out.println("\nThere are no moves left. Opponent wins by default.\n");
+			network.sendData("c " + myID + " c " + oppID + " l");
+		}
 
 		return move;
 	}
@@ -130,8 +137,7 @@ public class ControlUnit extends Thread
 			}
 			catch(Exception e)
 			{
-				System.out.println("There's been an exception recieving network data in ControlUnit: " + e);
-				System.exit(0);
+				System.out.println("Exception in ControlUnit(): " + e);
 			}
 
 			//decode revieved String if it is not a repeat of a command
@@ -199,6 +205,10 @@ public class ControlUnit extends Thread
 					{
 						control.move(r1, r2, c1, c2, false);
 					}
+				}
+				else if(data.substring(12,13).equals("l"))
+				{
+					System.out.println("\nYou've won the game by default!\n");
 				}
 				//REMOVE AFTER TEST STAGE
 				printBoard();

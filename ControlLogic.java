@@ -97,6 +97,8 @@ public class ControlLogic
 				else
 				{
 					//test to see if player must jump
+					mustJump = mover.canJump(prevA, prevB, king);
+					
 					if(mustJump)
 					{
 						System.out.println("You must jump your opponent's piece!");
@@ -178,11 +180,59 @@ public class ControlLogic
 
 	/**
 	*Determines if there are any moves left
-	*@return true if there are moves left
+	*@return true if there are moves left for current player (not opponent)
 	*/
 	protected boolean movesLeft()
 	{
-		return false;
+		boolean move = false;
+		
+		for(byte i = 0; i < 8; i++)
+		{
+			for(byte j = 0; j < 8; j++)
+			{
+				if(canMove(i, j))
+					move = true;
+			}
+		}
+		
+		return move;
+	}
+	
+	/**
+	*Helper for movesLeft()
+	*Method returns true if a particualr piece can move
+	*@param current row
+	*@param current coloumn
+	*@return true or false
+	*/
+	private boolean canMove(byte currA, byte currB)
+	{
+		boolean move = false;
+		
+		//make sure the current space isn't empty
+		if(board[currA][currB] != null)
+		{
+			boolean king = board[currA][currB].getKing();
+			boolean jump = mover.otherJump(currA, currB, king);
+			
+			if(jump)
+			{
+				move = true;
+			}
+			else
+			{
+				if(currA<7 && currB<7 && board[currA+1][currB+1] == null && mover.playableSquare((byte)(currA+1), (byte)(currB+1)) && king)
+					move = true;
+				else if(currA<7 && currB>0 && board[currA+1][currB-1] == null && mover.playableSquare((byte)(currA+1), (byte)(currB-1)) && king)
+					move = true;
+				else if(currA>0 && currB>0 && board[currA-1][currB-1] == null && mover.playableSquare((byte)(currA-1), (byte)(currB-1)))
+					move = true;
+				else if(currA>0 && currB<7 && board[currA-1][currB+1] == null && mover.playableSquare((byte)(currA-1), (byte)(currB+1)))
+					move = true;
+			}
+		}
+		
+		return move;
 	}
 
 	/**

@@ -186,9 +186,19 @@ public class MoveVerifier
 	*Will determine if there is a jump to be made (a player must jump if the oppertunity exists)
 	*@param current row coordinate
 	*@param current coloumn coordinate
+	*@return true if the player can make a jump.
 	*/
-	protected boolean canJump(byte currA, byte currB)
+	protected boolean canJump(byte currA, byte currB, boolean king)
 	{
+		for(byte i = 0; i < 8; i++)
+		{
+			for(byte j = 0; j < 8; j++)
+			{
+				if(board[i][j] == 1 && otherJump(i, j, king))
+					return true;
+			}
+		}
+		
 		return false;
 	}
 	
