@@ -151,6 +151,10 @@ public class ControlLogic
 						else if(currB==prevB-2)
 							board[prevA-1][prevB-1] = null;
 					}
+					
+					//analyze status
+					if(board[currA][currB] != null)
+						status(prevA, prevB, currA, currB, board[currA][currB].getOwner());
 				}
 				
 				else
