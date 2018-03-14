@@ -1,6 +1,6 @@
 /**
 *This class is the main class in the back end of the checkers game. It Implements ControlLogic and TransmitData. It also inherits from Thread.
-*@version 1.1
+*@version 1.2
 *@author Dan Martineau
 */
 
@@ -15,6 +15,7 @@ public class ControlUnit extends Thread
 	private int myScore;
 	private boolean mustJump;
 	private String prevString;
+	private Queue out;
 
 	/**
 	*Constructor
@@ -25,6 +26,7 @@ public class ControlUnit extends Thread
 		network = new TransmitData(ip);
 		myScore = 0;
 		mustJump = false;
+		out = new Queue();
 
 		//makes sure that TransmitData is fully initialized so that our data will be accurate
 		do
@@ -78,17 +80,17 @@ public class ControlUnit extends Thread
 		byte[] currByte = {currA, currB}; String curr = new String(currByte);
 
 		if(jump && mustJump)
-			network.sendData("c " + myID + " c " + oppID + " j " + control.getOppCoordinates(prev) + " " + control.getOppCoordinates(curr) + " f");
+			out.enque("c " + myID + " c " + oppID + " j " + control.getOppCoordinates(prev) + " " + control.getOppCoordinates(curr) + " f");
 		else if(jump && !mustJump)
-			network.sendData("c " + myID + " c " + oppID + " j " + control.getOppCoordinates(prev) + " " + control.getOppCoordinates(curr) + " t");
+			out.enque("c " + myID + " c " + oppID + " j " + control.getOppCoordinates(prev) + " " + control.getOppCoordinates(curr) + " t");
 		else if(move && !jump)
-			network.sendData("c " + myID + " c " + oppID + " m " + control.getOppCoordinates(prev) + " " + control.getOppCoordinates(curr));
+			out.enque("c " + myID + " c " + oppID + " m " + control.getOppCoordinates(prev) + " " + control.getOppCoordinates(curr));
 		
 		//see if there are anhy moves left
 		if(!control.movesLeft())
 		{
 			System.out.println("\nThere are no moves left. Opponent wins by default.\n");
-			network.sendData("c " + myID + " c " + oppID + " l");
+			out.enque("c " + myID + " c " + oppID + " l");
 		}
 
 		return move;
@@ -119,6 +121,15 @@ public class ControlUnit extends Thread
 	{
 		return control.getMyTurn();
 	}
+	
+	/**
+	*Tells whether or not player is engaged
+	*@return engagement status
+	*/
+	protected boolean engaged()
+	{
+		return engaged;
+	}
 
 	/**
 	*Run method from Thread
@@ -137,7 +148,7 @@ public class ControlUnit extends Thread
 			}
 			catch(Exception e)
 			{
-				System.out.println("Exception in ControlUnit(): " + e);
+				System.out.println("Exception recieving in ControlUnit(): " + e);
 			}
 
 			//decode revieved String if it is not a repeat of a command
@@ -149,6 +160,16 @@ public class ControlUnit extends Thread
 
 			//make sure we have opponent
 			network.engagementStatus();
+			
+			try
+			{
+				if(engaged)
+					network.sendData(out.deque());
+			}
+			catch(Exception x)
+			{
+				System.out.println("Exception sending in ControlUnit(): " + x);
+			}
 
 			//reset hold
 			hold = null;
