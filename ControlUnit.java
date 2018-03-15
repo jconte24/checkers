@@ -1,6 +1,6 @@
 /**
 *This class is the main class in the back end of the checkers game. It Implements ControlLogic and TransmitData. It also inherits from Thread.
-*@version 1.2
+*@version 2.0
 *@author Dan Martineau
 */
 
@@ -14,8 +14,11 @@ public class ControlUnit extends Thread
 	private boolean engaged;
 	private int myScore;
 	private boolean mustJump;
-	private String prevString;
-	private Queue out;
+	private String prevString;		//string previously recieved
+	private Queue out;				//Queue for outgoing Strings
+	private Queue status;			//Queue for status updates
+	private Queue chat;				//Queue for chat messages
+	private Queue oppMoves;			//Queue for opponent moves
 
 	/**
 	*Constructor
@@ -27,6 +30,9 @@ public class ControlUnit extends Thread
 		myScore = 0;
 		mustJump = false;
 		out = new Queue();
+		status = new Queue();
+		chat = new Queue();
+		oppMoves = new Queue();
 
 		//makes sure that TransmitData is fully initialized so that our data will be accurate
 		do
@@ -52,10 +58,9 @@ public class ControlUnit extends Thread
 	*@param previous coloumn coordinate
 	*@param current row coordinate
 	*@param current coloumn coordinate
-	*@param true if player's piece should be moved, false if opponent's piece should be moved
 	*@return true if piece was moved
 	*/
-	protected boolean move(byte prevA, byte prevB, byte currA, byte currB, boolean whom)
+	protected boolean move(byte prevA, byte prevB, byte currA, byte currB)
 	{
 		//don't allow a move if it's not player's turn--this is one reason not to use this method internally
 		if(!control.getMyTurn())
@@ -68,7 +73,7 @@ public class ControlUnit extends Thread
 		jump = control.isJump(prevA, prevB, currA, currB, false);
 
 		//move the piece
-		move = control.move(prevA, prevB, currA, currB, whom);
+		move = control.move(prevA, prevB, currA, currB, true);
 
 		//find out if player must jump again
 		mustJump = control.getJumpStatus();
@@ -129,6 +134,60 @@ public class ControlUnit extends Thread
 	protected boolean engaged()
 	{
 		return engaged;
+	}
+	
+	/**
+	*Sends a chat message to opponent
+	*@param message string
+	*/
+	protected void sendMessage(String message)
+	{
+		out.enque("c " + myID + " c " + oppID + " c " + message);
+	}
+	
+	/**
+	*Fetches chat messages
+	*@return message or null
+	*/
+	protected String getChat()
+	{
+		return chat.deque();
+	}
+	
+	/**
+	*Fetches status updates
+	*@return update or null
+	*/
+	protected String getStatus()
+	{
+		return status.deque();
+	}
+	
+	/**
+	*Fetches the coordinates of opponent's latest move
+	*@return latest move or array of -1 sentinals
+	*/
+	protected byte[] getMove()
+	{
+		byte[] move = new byte[4];
+		String coordinates = oppMoves.deque();
+		
+		if(coordinates==null)
+		{
+			for(int i = 0; i < 4; i++)
+			{
+				move[i] = -1;
+			}
+		}
+		else
+		{
+			for(int i = 0; i < 4; i++)
+			{
+				move[i] = Byte.parseByte(coordinates.substring(i, i+1));
+			}
+		}
+	
+		return move;
 	}
 
 	/**
@@ -193,18 +252,27 @@ public class ControlUnit extends Thread
 				engaged = false;
 				oppID = null;
 				System.out.println("\nPlayer has terminated the connection.");
+				status.enque("Player has terminated the connection.");
 			}
 			else if(data.substring(6,7).equals("c"))
 			{
 				if(data.substring(12,13).equals("l"))
 				{
 					System.out.println("\nYou've won the game by default!\n");
+					status.enque("You've won the game by default!");
+				}
+				
+				else if(data.substring(12,13).equals("c"))
+				{
+					System.out.println("\nMessage from opponent: " + data.substring(14) + "\n");
+					chat.enque(data.substring(14));
 				}
 				
 				else
 				{
 					//extract coordinates
 					String hold = data.substring(14,15);
+					boolean moved = false;
 					byte r1 = Byte.parseByte(hold);
 					hold = data.substring(15,16);
 					byte r2 = Byte.parseByte(hold);
@@ -215,23 +283,32 @@ public class ControlUnit extends Thread
 
 					if(data.substring(12,13).equals("m"))
 					{
-						control.move(r1, r2, c1, c2, false);
+						moved = control.move(r1, r2, c1, c2, false);
 
 						//it's my turn again
 						control.setMyTurn();
+						
+						if(moved)
+							oppMoves.enque("" + r1 + r2 + c1 + c2);
 					}
 					else if(data.substring(12,13).equals("j"))
 					{
 						if(data.substring(20).equals("t"))
 						{
-							control.move(r1, r2, c1, c2, false);
+							moved = control.move(r1, r2, c1, c2, false);
 
 							//it's my turn again
 							control.setMyTurn();
+							
+							if(moved)
+								oppMoves.enque("" + r1 + r2 + c1 + c2);
 						}
 						else if(data.substring(20).equals("f"))
 						{
-							control.move(r1, r2, c1, c2, false);
+							moved = control.move(r1, r2, c1, c2, false);
+							
+							if(moved)
+								oppMoves.enque("" + r1 + r2 + c1 + c2);
 						}
 					}
 					//REMOVE AFTER TEST STAGE
@@ -242,6 +319,7 @@ public class ControlUnit extends Thread
 					{
 						System.out.println("\nThere are no moves left. Opponent wins by default.\n");
 						out.enque("c " + myID + " c " + oppID + " l");
+						status.enque("There are no moves left. Opponent wins by default.");
 					}
 				}
 			}
@@ -253,6 +331,7 @@ public class ControlUnit extends Thread
 					engaged = true;
 					oppID = data.substring(10,13);
 					System.out.println("\nYou are paired with the opponent: " + oppID);
+					status.enque("You are paired with the opponent: " + oppID);
 				}
 				//player has no opponent
 				else if(data.substring(8,9).equals("f"))
@@ -260,6 +339,7 @@ public class ControlUnit extends Thread
 					engaged = false;
 					oppID = null;
 					System.out.println("\nYou are not paired with any opponent.");
+					status.enque("You are not paired with any opponent.");
 				}
 			}
 			else if(data.substring(6,7).equals("n"))
@@ -270,6 +350,7 @@ public class ControlUnit extends Thread
 					engaged = true;
 					oppID = data.substring(10,13);
 					System.out.println("\nOpponent found: " + oppID);
+					status.enque("Opponent found: " + oppID);
 				}
 				//no opponents available
 				else if(data.substring(8,9).equals("f"))
@@ -277,6 +358,7 @@ public class ControlUnit extends Thread
 					engaged = false;
 					oppID = null;
 					System.out.println("\nThere are no opponents available at this time.");
+					status.enque("There are no opponents available at this time.");
 				}
 			}
 			else if(data.substring(6,7).equals("i"))
