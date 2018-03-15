@@ -467,11 +467,11 @@ public class ControlLogic
 			for(byte j = 0; j < 8; j++)
 			{
 				if(board[i][j] != null)
-					str.concat(" " + board[i][j].toString() + " ");
+					str+=("  " + board[i][j].toString() + "  ");
 				else
-					str.concat(" - ");
+					str+=("  -  ");
 			}
-			str.concat("\n");
+			str+=("\n");
 		}
 		
 		return str;

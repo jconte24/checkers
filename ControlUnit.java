@@ -86,10 +86,14 @@ public class ControlUnit extends Thread
 
 		if(jump && mustJump)
 			out.enque("c " + myID + " c " + oppID + " j " + control.getOppCoordinates(prev) + " " + control.getOppCoordinates(curr) + " f");
+		else if(!jump && mustJump)
+			status.enque("You must jump your opponent's piece");
 		else if(jump && !mustJump)
 			out.enque("c " + myID + " c " + oppID + " j " + control.getOppCoordinates(prev) + " " + control.getOppCoordinates(curr) + " t");
 		else if(move && !jump)
 			out.enque("c " + myID + " c " + oppID + " m " + control.getOppCoordinates(prev) + " " + control.getOppCoordinates(curr));
+		else if(!move && !jump)
+			status.enque("Invalid move!");
 		
 		//see if there are anhy moves left
 		if(!control.movesLeft())
