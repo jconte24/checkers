@@ -456,4 +456,24 @@ public class ControlLogic
 			System.out.println();
 		}
 	}
+	
+	//for testing purposes only
+	public String toString()
+	{
+		String str = "\n";
+		
+		for(byte i = 0; i < 8; i++)
+		{
+			for(byte j = 0; j < 8; j++)
+			{
+				if(board[i][j] != null)
+					str.concat(" " + board[i][j].toString() + " ");
+				else
+					str.concat(" - ");
+			}
+			str.concat("\n");
+		}
+		
+		return str;
+	}
 }
