@@ -374,4 +374,10 @@ public class ControlUnit extends Thread
 	{
 		control.printBoard();
 	}
+	
+	//for testing purposes only
+	public String toString()
+	{
+		return control.toString();
+	}
 }
