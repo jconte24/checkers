@@ -213,8 +213,8 @@ public class ControlLogic
 	{
 		boolean move = false;
 		
-		//make sure the current space isn't empty
-		if(board[currA][currB] != null)
+		//make sure the current space isn't empty and that it belongs to current player
+		if(board[currA][currB] != null && board[currA][currB].getOwner())
 		{
 			boolean king = board[currA][currB].getKing();
 			boolean jump = mover.otherJump(currA, currB, king);

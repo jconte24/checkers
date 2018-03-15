@@ -163,7 +163,7 @@ public class ControlUnit extends Thread
 			
 			try
 			{
-				if(engaged)
+				if(engaged && out.getLength() > 0)
 					network.sendData(out.deque());
 			}
 			catch(Exception x)
@@ -196,43 +196,54 @@ public class ControlUnit extends Thread
 			}
 			else if(data.substring(6,7).equals("c"))
 			{
-				//extract coordinates
-				String hold = data.substring(14,15);
-				byte r1 = Byte.parseByte(hold);
-				hold = data.substring(15,16);
-				byte r2 = Byte.parseByte(hold);
-				hold = data.substring(17,18);
-				byte c1 = Byte.parseByte(hold);
-				hold = data.substring(18,19);
-				byte c2 = Byte.parseByte(hold);
-
-				if(data.substring(12,13).equals("m"))
+				if(data.substring(12,13).equals("l"))
 				{
-					control.move(r1, r2, c1, c2, false);
-
-					//it's my turn again
-					control.setMyTurn();
+					System.out.println("\nYou've won the game by default!\n");
 				}
-				else if(data.substring(12,13).equals("j"))
+				
+				else
 				{
-					if(data.substring(20).equals("t"))
+					//extract coordinates
+					String hold = data.substring(14,15);
+					byte r1 = Byte.parseByte(hold);
+					hold = data.substring(15,16);
+					byte r2 = Byte.parseByte(hold);
+					hold = data.substring(17,18);
+					byte c1 = Byte.parseByte(hold);
+					hold = data.substring(18,19);
+					byte c2 = Byte.parseByte(hold);
+
+					if(data.substring(12,13).equals("m"))
 					{
 						control.move(r1, r2, c1, c2, false);
 
 						//it's my turn again
 						control.setMyTurn();
 					}
-					else if(data.substring(20).equals("f"))
+					else if(data.substring(12,13).equals("j"))
 					{
-						control.move(r1, r2, c1, c2, false);
+						if(data.substring(20).equals("t"))
+						{
+							control.move(r1, r2, c1, c2, false);
+
+							//it's my turn again
+							control.setMyTurn();
+						}
+						else if(data.substring(20).equals("f"))
+						{
+							control.move(r1, r2, c1, c2, false);
+						}
+					}
+					//REMOVE AFTER TEST STAGE
+					printBoard();
+					
+					//see if there are anhy moves left for current player
+					if(!control.movesLeft())
+					{
+						System.out.println("\nThere are no moves left. Opponent wins by default.\n");
+						out.enque("c " + myID + " c " + oppID + " l");
 					}
 				}
-				else if(data.substring(12,13).equals("l"))
-				{
-					System.out.println("\nYou've won the game by default!\n");
-				}
-				//REMOVE AFTER TEST STAGE
-				printBoard();
 			}
 			else if(data.substring(6,7).equals("o"))
 			{
