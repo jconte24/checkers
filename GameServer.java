@@ -121,10 +121,12 @@ public class GameServer extends Thread
 		else if(data.substring(6,7).equals("n"))
 		{
 			String newOppID = null;
+			Node oldOpp = null;
 			Node newOpp = null;
 			int count = 1;
 
 			newOppID = findOpp(id);
+			oldOpp = getNode(node.getOppID());
 			newOpp = getNode(newOppID);
 
 			if(newOpp != null)
@@ -132,6 +134,7 @@ public class GameServer extends Thread
 				node = getNode(id);
 				enqueStr = "c " + id + " n t " + newOpp.getMyID();
 				(node.getMyQueue()).enque(enqueStr);
+				(oldOpp.getMyQueue()).enque("c " + oldOpp.getMyID() + " d");
 
 				System.out.println("New opponent found: " + newOpp.getMyID());
 			}
