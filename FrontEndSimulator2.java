@@ -13,6 +13,7 @@ public class FrontEndSimulator2 extends JFrame {
     private ControlUnit control;
     private boolean connected;
     private File inFile;
+	private File outFile;
     private Scanner in;
     private String ip;
 	private ArrayList<Byte> list;
@@ -121,8 +122,8 @@ public class FrontEndSimulator2 extends JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosed(java.awt.event.WindowEvent evt) {
-                formWindowClosed(evt);
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
             }
         });
 
@@ -162,6 +163,12 @@ public class FrontEndSimulator2 extends JFrame {
         jButton4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton4ActionPerformed(evt);
+            }
+        });
+		
+		jTextField2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+               jTextField2ActionPerformed(evt);
             }
         });
 
@@ -362,19 +369,31 @@ public class FrontEndSimulator2 extends JFrame {
         pack();
     }// </editor-fold>
 
-    private void formWindowClosed(java.awt.event.WindowEvent evt) {
-        if(connected && control.engaged())
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {
+        if(connected)
             control.endAndExit();
     }
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {
         try
         {
-        connect(jTextField3.getText());
+			connect(jTextField3.getText());
         }
         catch(Exception e)
         {
             jLabel1.setText("FAILED TO CONNECT!");
+        }
+    }
+	
+	private void jTextField2ActionPerformed(java.awt.event.ActionEvent evt) {
+        try
+        {
+			export();
+			jLabel1.setText("The game has been exported to " + jTextField2.getText());
+        }
+        catch(Exception e)
+        {
+            jLabel1.setText("FAILED TO EXPORT!");
         }
     }
 
@@ -385,8 +404,8 @@ public class FrontEndSimulator2 extends JFrame {
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {
 		try
 		{
-				jLabel1.setText("Running game from file. Please be patient.");
-				run = true;
+			jLabel1.setText("Running game from file. Please be patient.");
+			run = true;
 		}
 		catch(Exception e)
 		{
@@ -399,7 +418,7 @@ public class FrontEndSimulator2 extends JFrame {
     }
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {
-        if(jTextField5.getText()!=null || !jTextField5.getText().equals("") || !jTextField5.getText().equals(" "))
+        if(connected && control.engaged() && jTextField5.getText()!=null || !jTextField5.getText().equals("") || !jTextField5.getText().equals(" "))
         {
             control.sendMessage(jTextField5.getText());
             jLabel1.setText("Message sent to opponent.");
@@ -448,6 +467,7 @@ public class FrontEndSimulator2 extends JFrame {
             {
                 control = new ControlUnit(ip);
                 jLabel4.setText("Connected");
+				jLabel1.setText("Connection Established.");
 				connected = true;
             }
             else
@@ -486,10 +506,7 @@ public class FrontEndSimulator2 extends JFrame {
 
                 if(found && in.hasNext())
                 {
-                    ip = in.nextLine();
-                    control = new ControlUnit(ip);
                     control.printBoard();
-                    connected  = true;
 
                     System.out.print("Waiting for opponent to be assigned");
 
@@ -501,7 +518,14 @@ public class FrontEndSimulator2 extends JFrame {
 
                     while(in.hasNext())
 					{
-                        r1 = Byte.parseByte(in.nextLine());
+						String line = in.nextLine();
+						
+						//make sure we don't use an ip address as a move
+						if(line.length() > 1)
+							r1 = Byte.parseByte(in.nextLine());
+						else
+							r1 = Byte.parseByte(line);
+							
                         list.add(r1);
 
                         r2 = Byte.parseByte(in.nextLine());
@@ -542,20 +566,32 @@ public class FrontEndSimulator2 extends JFrame {
            jLabel1.setText("CANNOT MOVE IF YOU ARE NOT CONNECTED AND PAIRED!");
 	   
 	   run = false;
+	   jLabel1.setText("Reached end of file. Continue Manually.");
+	   in.close();
     }
 
     private void move(String coor)
     {
+		jLabel1.setText(" ");
+		
+		boolean moved;
         boolean myTurn = control.getMyTurn();
 
         if(connected && control.engaged() && control.getMyTurn())
         {
             byte r1 = Byte.parseByte(coor.substring(0,1));
+			list.add(r1);
             byte r2 = Byte.parseByte(coor.substring(1,2));
+			list.add(r2);
             byte c1 = Byte.parseByte(coor.substring(2,3));
+			list.add(c1);
             byte c2 = Byte.parseByte(coor.substring(3));
+			list.add(c2);
 
-            control.move(r1, r2, c1, c2);
+            moved = control.move(r1, r2, c1, c2);
+			
+			if(moved)
+				jLabel1.setText("Piece has been moved.");
         }
         else if(control.engaged() && !myTurn)
             jLabel1.setText("IT'S NOT YOUR TURN!");
@@ -563,6 +599,21 @@ public class FrontEndSimulator2 extends JFrame {
             jLabel1.setText("CANNOT MOVE IF YOU ARE NOT CONNECTED AND PAIRED!");
 
     }
+	
+	private void export() throws Exception
+	{
+		jLabel1.setText(" ");
+		
+		File outFile = new File(jTextField2.getText());
+		PrintWriter outputFile = new PrintWriter(outFile);
+		
+		for(int i = 0; i < list.size(); i++)
+		{
+			outputFile.println(list.get(i));
+		}
+		
+		outputFile.close();
+	}
 
     // Variables declaration - do not modify
     private javax.swing.JButton jButton3;

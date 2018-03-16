@@ -469,7 +469,7 @@ public class ControlLogic
 				if(board[i][j] != null)
 					str+=("  " + board[i][j].toString() + "  ");
 				else
-					str+=("  -  ");
+					str+=("  _  ");
 			}
 			str+=("\n");
 		}

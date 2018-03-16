@@ -33,13 +33,13 @@ public class ControlUnit extends Thread
 		status = new Queue();
 		chat = new Queue();
 		oppMoves = new Queue();
+		engaged = false;
 
 		//makes sure that TransmitData is fully initialized so that our data will be accurate
 		do
 		{
 			myID = network.getMyID();
 			oppID = network.getOppID();
-			engaged = network.engagementStatus();
 		}while(!network.initialized());
 
 		//decide who begins
@@ -269,7 +269,9 @@ public class ControlUnit extends Thread
 				else if(data.substring(12,13).equals("c"))
 				{
 					System.out.println("\nMessage from opponent: " + data.substring(14) + "\n");
+					
 					chat.enque(data.substring(14));
+					status.enque("Message recieved from opponent.");
 				}
 				
 				else
@@ -355,14 +357,22 @@ public class ControlUnit extends Thread
 					oppID = data.substring(10,13);
 					System.out.println("\nOpponent found: " + oppID);
 					status.enque("Opponent found: " + oppID);
+					
+					boolean gotNew = false;
+		
+					//decide who begins
+					if(oppID == null || Integer.parseInt(network.getMyID()) < Integer.parseInt(network.getOppID()))
+						control = new ControlLogic(true);
+					else
+						control = new ControlLogic(false);
 				}
 				//no opponents available
 				else if(data.substring(8,9).equals("f"))
 				{
 					engaged = false;
 					oppID = null;
-					System.out.println("\nThere are no opponents available at this time.");
-					status.enque("There are no opponents available at this time.");
+					System.out.println("\nThere are no new opponents available at this time.");
+					status.enque("There are no new opponents available at this time.");
 				}
 			}
 			else if(data.substring(6,7).equals("i"))
