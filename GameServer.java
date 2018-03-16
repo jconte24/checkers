@@ -126,12 +126,12 @@ public class GameServer extends Thread
 			int count = 1;
 
 			newOppID = findOpp(id);
-			oldOpp = getNode(node.getOppID());
 			newOpp = getNode(newOppID);
 
 			if(newOpp != null)
 			{
 				node = getNode(id);
+				oldOpp = getNode(node.getOppID());
 				enqueStr = "c " + id + " n t " + newOpp.getMyID();
 				(node.getMyQueue()).enque(enqueStr);
 				(oldOpp.getMyQueue()).enque("c " + oldOpp.getMyID() + " d");
