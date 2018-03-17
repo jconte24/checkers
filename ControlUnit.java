@@ -1,6 +1,6 @@
 /**
 *This class is the main class in the back end of the checkers game. It Implements ControlLogic and TransmitData. It also inherits from Thread.
-*@version 2.0
+*@version 2.1
 *@author Dan Martineau
 */
 
@@ -94,7 +94,7 @@ public class ControlUnit extends Thread
 			out.enque("c " + myID + " c " + oppID + " m " + control.getOppCoordinates(prev) + " " + control.getOppCoordinates(curr));
 		else if(!move && !jump)
 			status.enque("Invalid move!");
-		
+
 		//see if there are anhy moves left
 		if(!control.movesLeft())
 		{
@@ -130,7 +130,7 @@ public class ControlUnit extends Thread
 	{
 		return control.getMyTurn();
 	}
-	
+
 	/**
 	*Tells whether or not player is engaged
 	*@return engagement status
@@ -139,7 +139,7 @@ public class ControlUnit extends Thread
 	{
 		return engaged;
 	}
-	
+
 	/**
 	*Sends a chat message to opponent
 	*@param message string
@@ -149,7 +149,7 @@ public class ControlUnit extends Thread
 		if(engaged)
 			out.enque("c " + myID + " c " + oppID + " c " + message);
 	}
-	
+
 	/**
 	*Fetches chat messages
 	*@return message or null
@@ -158,7 +158,7 @@ public class ControlUnit extends Thread
 	{
 		return chat.deque();
 	}
-	
+
 	/**
 	*Fetches status updates
 	*@return update or null
@@ -167,7 +167,7 @@ public class ControlUnit extends Thread
 	{
 		return status.deque();
 	}
-	
+
 	/**
 	*Fetches the coordinates of opponent's latest move
 	*@return latest move or array of -1 sentinals
@@ -176,7 +176,7 @@ public class ControlUnit extends Thread
 	{
 		byte[] move = new byte[4];
 		String coordinates = oppMoves.deque();
-		
+
 		if(coordinates==null)
 		{
 			for(int i = 0; i < 4; i++)
@@ -191,8 +191,26 @@ public class ControlUnit extends Thread
 				move[i] = Byte.parseByte(coordinates.substring(i, i+1));
 			}
 		}
-	
+
 		return move;
+	}
+
+	/**
+	*Returns the player's ID
+	*@return myID
+	*/
+	protected String getMyID()
+	{
+		return myID;
+	}
+
+	/**
+	*Returns the opponent's ID
+	*@return oppID
+	*/
+	protected String getOppID()
+	{
+		return oppID;
 	}
 
 	/**
@@ -224,7 +242,7 @@ public class ControlUnit extends Thread
 
 			//make sure we have opponent
 			network.engagementStatus();
-			
+
 			try
 			{
 				if(engaged && out.getLength() > 0)
@@ -266,15 +284,15 @@ public class ControlUnit extends Thread
 					System.out.println("\nYou've won the game by default!\n");
 					status.enque("You've won the game by default!");
 				}
-				
+
 				else if(data.substring(12,13).equals("c"))
 				{
 					System.out.println("\nMessage from opponent: " + data.substring(14) + "\n");
-					
+
 					chat.enque(data.substring(14));
 					status.enque("Message recieved from opponent.");
 				}
-				
+
 				else
 				{
 					//extract coordinates
@@ -294,7 +312,7 @@ public class ControlUnit extends Thread
 
 						//it's my turn again
 						control.setMyTurn();
-						
+
 						if(moved)
 							oppMoves.enque("" + r1 + r2 + c1 + c2);
 					}
@@ -306,21 +324,21 @@ public class ControlUnit extends Thread
 
 							//it's my turn again
 							control.setMyTurn();
-							
+
 							if(moved)
 								oppMoves.enque("" + r1 + r2 + c1 + c2);
 						}
 						else if(data.substring(20).equals("f"))
 						{
 							moved = control.move(r1, r2, c1, c2, false);
-							
+
 							if(moved)
 								oppMoves.enque("" + r1 + r2 + c1 + c2);
 						}
 					}
 					//REMOVE AFTER TEST STAGE
 					printBoard();
-					
+
 					//see if there are anhy moves left for current player
 					if(!control.movesLeft())
 					{
@@ -358,11 +376,11 @@ public class ControlUnit extends Thread
 					oppID = data.substring(10,13);
 					System.out.println("\nOpponent found: " + oppID);
 					status.enque("Opponent found: " + oppID);
-					
+
 					boolean gotNew = false;
-		
+
 					//decide who begins
-					if(oppID == null || Integer.parseInt(network.getMyID()) < Integer.parseInt(network.getOppID()))
+					if(oppID == null || Integer.parseInt(myID) < Integer.parseInt(oppID))
 						control = new ControlLogic(true);
 					else
 						control = new ControlLogic(false);
@@ -389,7 +407,7 @@ public class ControlUnit extends Thread
 	{
 		control.printBoard();
 	}
-	
+
 	//for testing purposes only
 	public String toString()
 	{
