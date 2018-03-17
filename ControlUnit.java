@@ -274,8 +274,8 @@ public class ControlUnit extends Thread
 				//player has been disconnected from opponent
 				engaged = false;
 				oppID = null;
-				System.out.println("\nPlayer has terminated the connection.");
-				status.enque("Player has terminated the connection.");
+				System.out.println("\nOpponent has terminated the connection.");
+				status.enque("Opponent has terminated the connection.");
 			}
 			else if(data.substring(6,7).equals("c"))
 			{
