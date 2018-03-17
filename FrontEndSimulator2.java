@@ -415,10 +415,12 @@ public class FrontEndSimulator2 extends JFrame {
 
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {
         control.newOpponent();
+		jTextArea2.selectAll();
+		jTextArea2.replaceSelection(" ");
     }
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {
-        if(connected && control.engaged() && jTextField5.getText()!=null || !jTextField5.getText().equals("") || !jTextField5.getText().equals(" "))
+        if(connected && control.engaged() && (jTextField5.getText()!=null || !jTextField5.getText().equals("") || !jTextField5.getText().equals(" ")))
         {
             control.sendMessage(jTextField5.getText());
             jLabel1.setText("Message sent to opponent.");

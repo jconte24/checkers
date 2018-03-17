@@ -63,7 +63,7 @@ public class ControlUnit extends Thread
 	protected boolean move(byte prevA, byte prevB, byte currA, byte currB)
 	{
 		//don't allow a move if it's not player's turn--this is one reason not to use this method internally
-		if(!control.getMyTurn())
+		if(!control.getMyTurn() && !engaged)
 			return false;
 
 		boolean move = false;
@@ -146,7 +146,8 @@ public class ControlUnit extends Thread
 	*/
 	protected void sendMessage(String message)
 	{
-		out.enque("c " + myID + " c " + oppID + " c " + message);
+		if(engaged)
+			out.enque("c " + myID + " c " + oppID + " c " + message);
 	}
 	
 	/**
@@ -215,11 +216,11 @@ public class ControlUnit extends Thread
 			}
 
 			//decode revieved String if it is not a repeat of a command
-			if(hold != null && (!hold.equals(prevString)))
-			{
-				prevString = hold;
+			//if(hold != null && (!hold.equals(prevString)))
+			//{
+				//prevString = hold;
 				decode(hold);
-			}
+			//}
 
 			//make sure we have opponent
 			network.engagementStatus();
