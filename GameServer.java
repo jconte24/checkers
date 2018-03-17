@@ -98,7 +98,7 @@ public class GameServer extends Thread
 			(node.getMyQueue()).enque(enqueStr);
 		}
 		//if the client inquires about opponent status
-		else if(data.substring(6,7).equals("o"))
+		else if(!id.equals("jjj") && data.substring(6,7).equals("o"))
 		{
 			System.out.println("Client " + id + " requested opponent status.");
 			//get node associated with id
@@ -118,35 +118,41 @@ public class GameServer extends Thread
 			}
 		}
 		//if client requests new opponent
-		else if(data.substring(6,7).equals("n"))
+		else if(!id.equals("jjj") && data.substring(6,7).equals("n"))
 		{
 			String newOppID = null;
 			Node oldOpp = null;
 			Node newOpp = null;
 			int count = 1;
-
+			
+			node = getNode(id);
+			oldOpp = getNode(node.getOppID());
 			newOppID = findOpp(id);
 			newOpp = getNode(newOppID);
 
 			if(newOpp != null)
 			{
-				node = getNode(id);
-				oldOpp = getNode(node.getOppID());
+				if(oldOpp!=null)
+				{
+					oldOpp.removeOpp();
+					(oldOpp.getMyQueue()).enque("c " + oldOpp.getMyID() + " d");
+				}
+				
 				enqueStr = "c " + id + " n t " + newOpp.getMyID();
 				(node.getMyQueue()).enque(enqueStr);
-				(oldOpp.getMyQueue()).enque("c " + oldOpp.getMyID() + " d");
+				node.setOppID(newOpp.getMyID());
 
 				System.out.println("New opponent found: " + newOpp.getMyID());
 			}
 			else
 			{
-				node = getNode(id);
+				//node = getNode(id);
 				enqueStr = "c " + id + " n f ";
 				(node.getMyQueue()).enque(enqueStr);
 				System.out.println("No other players found.");
 			}
 		}
-		else if(data.substring(6,7).equals("t"))
+		else if(!id.equals("jjj") && data.substring(6,7).equals("t"))
 		{
 			node = getNode(id);
 
@@ -168,7 +174,7 @@ public class GameServer extends Thread
 			//we can't set node to null beucase we want to preserve its data, so we will return null here.
 			return null;
 		}
-		else if(data.substring(6,7).equals("f"))
+		else if(!id.equals("jjj") && data.substring(6,7).equals("f"))
 		{
 			//set the current node so that any messages in its queue will be sent to client
 			node = getNode(id);

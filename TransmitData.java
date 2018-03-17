@@ -4,7 +4,7 @@ import java.net.*;
 
 /**
 *This is the hub of the networking module for the LSDJ Checkers project
-*@version 2.1
+*@version 2.2
 *@author Dan Martineau
 */
 public class TransmitData //extends Thread
@@ -55,10 +55,8 @@ public class TransmitData //extends Thread
 	}
 
 	/**
-	*Inherits from Thread class
 	*Will send and recieve data from the server
 	*/
-	//@Override
 	private void run()
 	{
 
@@ -71,18 +69,21 @@ public class TransmitData //extends Thread
 			String message = "";
 
 			//There may be times when there's nothing to send or recieve, so this timer prevents getting hung up on receiving.
-			sock.setSoTimeout(350);
+			sock.setSoTimeout(250);
 			try
 			{
 				if(outgoing.getLength() > 0)
 				{
 					hold = outgoing.deque();
-					//System.out.println("Message being sent: " + hold);
-					buffer = hold.getBytes();
-					packet = new DatagramPacket(buffer, buffer.length, ip, PORT);
-					sock.send(packet);
+					
+					if(hold != null && hold.length() > 0)
+					{
+						buffer = hold.getBytes();
+						packet = new DatagramPacket(buffer, buffer.length, ip, PORT);
+						sock.send(packet);
 
-					action = true;
+						action = true;
+					}
 				}
 			}
 			catch(SocketTimeoutException e)
@@ -92,10 +93,10 @@ public class TransmitData //extends Thread
 
 
 			//There may be times when there's nothing to send or recieve, so this timer prevents getting hung up on receiving.
-			sock.setSoTimeout(350);
+			sock.setSoTimeout(250);
 			try
 			{
-				buffer2 = new byte[512];
+				buffer2 = new byte[1024];
 				packet = new DatagramPacket(buffer2, buffer2.length);
 				sock.receive(packet);
 
@@ -113,7 +114,7 @@ public class TransmitData //extends Thread
 			if(action)
 			{
 				//send new opponent string into gotNewOpponent method
-				if(message.equals(newOppStr) || (message.substring(6,7).equals("o") && message.substring(8,9).equals("t")))
+				if((message.substring(6,7).equals("n") && message.substring(8,9).equals("t")) || (message.substring(6,7).equals("o") && message.substring(8,9).equals("t")))
 					gotNewOpponent(message);
 				//if the other opponent disconnects
 				else if((message.substring(6,7)).equals("d"))
