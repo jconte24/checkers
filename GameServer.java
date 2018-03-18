@@ -268,7 +268,11 @@ public class GameServer extends Thread
 			if(oppID==null)
 				node = new Node(myID, myPack, myQueue, null);
 			else
+			{
 				node = new Node(myID, myPack, myQueue, oppID);
+				//inform opponent that he is now paired
+				getNode(oppID).getMyQueue().enque("c " + oppID + " n t " + myID);
+			}
 
 			//replace node with new node
 			clients.set(i, node);
@@ -289,7 +293,11 @@ public class GameServer extends Thread
 				node = new Node(myID, myPack, myQueue, null);
 			//assign opponent to new player
 			else
+			{
 				node = new Node(myID, myPack, myQueue, oppID);
+				//inform opponent that he is now paired
+				getNode(oppID).getMyQueue().enque("c " + oppID + " n t " + myID);
+			}
 
 			clients.add(i, node);
 		}
@@ -337,7 +345,7 @@ public class GameServer extends Thread
 					clients.get(i).setOppID(playerID);
 					found = true;
 					//send new opponent string to opponent
-					clients.get(i).getMyQueue().enque("c " + id + " o t " + playerID);
+					clients.get(i).getMyQueue().enque("c " + id + " n t " + playerID);
 				}
 			}
 		}
