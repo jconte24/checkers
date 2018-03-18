@@ -233,12 +233,7 @@ public class ControlUnit extends Thread
 				System.out.println("Exception recieving in ControlUnit(): " + e);
 			}
 
-			//decode revieved String if it is not a repeat of a command
-			//if(hold != null && (!hold.equals(prevString)))
-			//{
-				//prevString = hold;
-				decode(hold);
-			//}
+			decode(hold);
 
 			//make sure we have opponent
 			network.engagementStatus();
