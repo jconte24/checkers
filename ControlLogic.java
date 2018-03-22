@@ -7,7 +7,7 @@ public class ControlLogic
 {
 
 	/*FIELDS*/
-	private Checker[][] board; 		//board array object
+	private DanChecker[][] board; 		//board array object
 	private MoveVerifier mover;		//instance of move verifier
 	private boolean mustJump;		//whether or not a player must make a jump
 	private int myScore;			//player's score
@@ -19,7 +19,7 @@ public class ControlLogic
 	*/
 	public ControlLogic(boolean myTurn)
 	{
-		board = new Checker[8][8];
+		board = new DanChecker[8][8];
 		mover = new MoveVerifier();
 
 		mustJump = false;
@@ -420,7 +420,7 @@ public class ControlLogic
 			{
 				if(mover.playableSquare(i, j))
 				{
-					Checker checker = new Checker(false);
+					DanChecker checker = new DanChecker(false);
 					board[i][j] = checker;
 				}
 			}
@@ -433,7 +433,7 @@ public class ControlLogic
 			{
 				if(mover.playableSquare(i, j))
 				{
-					Checker checker = new Checker(true);
+					DanChecker checker = new DanChecker(true);
 					board[i][j] = checker;
 				}
 			}
