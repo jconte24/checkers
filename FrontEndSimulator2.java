@@ -2,6 +2,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.io.*;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 /**
  * @version 2.0
@@ -21,6 +22,7 @@ public class FrontEndSimulator2 extends JFrame {
 	private boolean run;
 	private String status;
 	private String chat;
+	private int score;
 
     /**
      * Creates new form FrontEndSimulator
@@ -44,10 +46,13 @@ public class FrontEndSimulator2 extends JFrame {
 					{	
 						status = control.getStatus();
 						chat = control.getChat();
-
+						score = control.getMyScore();
+						
+						setTitle("Player " + control.getMyID() + "  |  My Score: " + score);
+						
 						if(status != null)
 						{
-							jLabel1.setText(status);
+							jLabel1.setText(status );
 							status = null;
 						}
 						if(chat != null)
@@ -186,7 +191,7 @@ public class FrontEndSimulator2 extends JFrame {
             }
         });
 
-        jButton6.setText("Get New");
+        jButton6.setText("Menu");
         jButton6.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton6ActionPerformed(evt);
@@ -206,7 +211,7 @@ public class FrontEndSimulator2 extends JFrame {
 
         jLabel6.setText("Chat");
 
-        jLabel7.setText("    New Opponent");
+        jLabel7.setText("Game Options");
 
         jLabel8.setText("Run Game From Input File");
 
@@ -422,10 +427,67 @@ public class FrontEndSimulator2 extends JFrame {
 		}
     }
 
-    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {
+    /*private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {
         control.newOpponent();
 		jTextArea2.selectAll();
 		jTextArea2.replaceSelection(" ");
+    }*/
+	
+	private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {
+		try
+		{
+			int option = 69;
+			
+			if(connected && control.engaged() && !control.gameOver())
+			{
+				String[] options = {"New Opp", "Resign", "Draw"};
+				option = JOptionPane.showOptionDialog(null, "Select an option: ", "menu", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+				
+				switch(option)
+				{
+					case 0:
+						control.newOpponent();
+						break;
+					case 1:
+						control.resign();
+						jLabel1.setText("You have resigned from the game. Opponent winz. #NotLit");
+						break;
+					case 2:
+						control.draw();
+				}
+			}
+			else if(connected && control.engaged() && control.gameOver())
+			{
+				String[] options = {"New Opp", "New Game"};
+				option = JOptionPane.showOptionDialog(null, "Select an option: ", "menu", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+				
+				switch(option)
+				{
+					case 0:
+						control.newOpponent();
+						break;
+					case 1:
+						control.newGame();
+						jLabel1.setText("Request sent.");
+				}
+			}
+			else if(connected && !control.engaged())
+			{
+				String[] options = {"New Opp"};
+				option = JOptionPane.showOptionDialog(null, "Select an option: ", "menu", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+				
+				if(option == 0)
+					control.newOpponent();
+			}
+			else if(!connected)
+			{
+				jLabel1.setText("CONNECT TO SERVER FIRST!");
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println(e);
+		}
     }
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {
@@ -578,7 +640,7 @@ public class FrontEndSimulator2 extends JFrame {
 		boolean moved;
         boolean myTurn = control.getMyTurn();
 
-        if(connected && control.engaged() && control.getMyTurn())
+        if(connected && control.engaged() && !control.gameOver() && control.getMyTurn())
         {
             byte r1 = Byte.parseByte(coor.substring(0,1));
 			list.add(r1);
@@ -594,6 +656,8 @@ public class FrontEndSimulator2 extends JFrame {
 			if(moved)
 				jLabel1.setText("Piece has been moved.");
         }
+		else if(control.gameOver())
+			jLabel1.setText("Game is over, can no longer move.");
         else if(control.engaged() && !myTurn)
             jLabel1.setText("IT'S NOT YOUR TURN!");
         else

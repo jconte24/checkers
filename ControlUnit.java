@@ -140,7 +140,8 @@ public class ControlUnit extends Thread
 	*/
 	protected void draw()
 	{
-		out.enque("c " + myID + " c " + oppID + " d");
+		if(!gameOver)
+			out.enque("c " + myID + " c " + oppID + " d");
 	}
 	
 	/**
@@ -150,6 +151,15 @@ public class ControlUnit extends Thread
 	protected boolean gameOver()
 	{
 		return gameOver;
+	}
+	
+	/**
+	*Passthrough to ControlLogic()--returns score of player
+	*@return the score
+	*/
+	protected int getMyScore()
+	{
+		return control.getMyScore();
 	}
 	
 	/**
@@ -312,6 +322,7 @@ public class ControlUnit extends Thread
 		if(result==JOptionPane.YES_OPTION)
 		{
 			out.enque("c " + myID + " c " + oppID + " g a");
+			status.enque("New game with player " + oppID + " has begun.");
 			
 			gameOver = false;
 			
@@ -324,6 +335,7 @@ public class ControlUnit extends Thread
 		else if(result==JOptionPane.NO_OPTION)
 		{
 			out.enque("c " + myID + " c " + oppID + " g r");
+			status.enque("You have rejected the new game invite from player " + oppID + ".");
 		}
 	}
 	
@@ -380,8 +392,9 @@ public class ControlUnit extends Thread
 				{
 					if(data.length() <= 13)
 					{
-						newGameRequest();
 						System.out.println("Opponent has requested new game.\n");
+						status.enque("Opponent has requested new game.");
+						newGameRequest();
 					}
 					else if(data.substring(14).equals("a"))
 					{
@@ -402,7 +415,7 @@ public class ControlUnit extends Thread
 					}
 				}
 				
-				else if(data.substring(12,13).equals("d"))
+				else if(data.substring(12,13).equals("d") && !gameOver)
 				{
 					if(data.length() <= 13)
 					{
