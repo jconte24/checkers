@@ -4,19 +4,27 @@ import javax.swing.JFrame;
 
 public class Checkers extends JFrame
 {
-   public Checkers(String title)
+   public Checkers(String title)throws Exception
    {
       super(title);
+
+       Board board = new Board(this);
+
       setDefaultCloseOperation(EXIT_ON_CLOSE);
+      addWindowListener(new java.awt.event.WindowAdapter() {
+	              public void windowClosing(java.awt.event.WindowEvent evt) {
+	                  board.formWindowClosing(evt);
+	              }
+        });
+		
+		board.fillBoard();
 
-      Board board = new Board();
-      board.add(new Checker(CheckerType.RED_REGULAR), 4, 1);
-      board.add(new Checker(CheckerType.BLACK_REGULAR), 6, 3);
-      board.add(new Checker(CheckerType.RED_KING), 5, 6);
-      setContentPane(board);
-
+      
+	  setContentPane(board);
       pack();
       setVisible(true);
+	  
+	  this.setTitle(title + "   |   Player: " + board.getMyID());
    }
 
    public static void main(String[] args)
@@ -26,7 +34,14 @@ public class Checkers extends JFrame
                       @Override
                       public void run()
                       {
-                         new Checkers("Checkers");
+						  try
+						  {
+                         	  new Checkers("Checkers");
+					 	  }
+					 	  catch(Exception e)
+					 	  {
+							  System.out.println(e);
+						  }
                       }
                    };
       EventQueue.invokeLater(r);
