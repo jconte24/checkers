@@ -1,8 +1,10 @@
 /**
 *This class is the main class in the back end of the checkers game. It Implements ControlLogic and TransmitData. It also inherits from Thread.
-*@version 2.1
+*@version 2.2
 *@author Dan Martineau
 */
+
+import javax.swing.JOptionPane;
 
 public class ControlUnit extends Thread
 {
@@ -19,6 +21,7 @@ public class ControlUnit extends Thread
 	private Queue status;			//Queue for status updates
 	private Queue chat;				//Queue for chat messages
 	private Queue oppMoves;			//Queue for opponent moves
+	private boolean gameOver;		//flag if the game is over
 
 	/**
 	*Constructor
@@ -34,6 +37,7 @@ public class ControlUnit extends Thread
 		chat = new Queue();
 		oppMoves = new Queue();
 		engaged = false;
+		gameOver = false;
 
 		//makes sure that TransmitData is fully initialized so that our data will be accurate
 		do
@@ -62,8 +66,8 @@ public class ControlUnit extends Thread
 	*/
 	protected boolean move(byte prevA, byte prevB, byte currA, byte currB)
 	{
-		//don't allow a move if it's not player's turn--this is one reason not to use this method internally
-		if(!control.getMyTurn() && !engaged)
+		//don't allow a move if it's not player's turn, not engaged, or if the game is over--this is one reason not to use this method internally
+		if(!control.getMyTurn() || !engaged || gameOver)
 			return false;
 
 		boolean move = false;
@@ -100,6 +104,7 @@ public class ControlUnit extends Thread
 		{
 			System.out.println("\nThere are no moves left. Opponent wins by default.\n");
 			out.enque("c " + myID + " c " + oppID + " l");
+			gameOver = true;
 		}
 
 		return move;
@@ -111,6 +116,49 @@ public class ControlUnit extends Thread
 	protected void newOpponent()
 	{
 		network.newOpponent();
+	}
+	
+	/**
+	*Offer to start a new game with the current opponent if the game is over
+	*@return true if the current game is over and there is still an opponent
+	*/
+	protected boolean newGame()
+	{
+		boolean newGame = false;
+		
+		if(engaged && gameOver)
+		{
+			out.enque("c " + myID + " c " + oppID + " g");
+			newGame = true;
+		}
+		
+		return newGame;
+	}
+
+	/**
+	*Offer a draw with the current opponent
+	*/
+	protected void draw()
+	{
+		out.enque("c " + myID + " c " + oppID + " d");
+	}
+	
+	/**
+	*Returns true if the game is over
+	*@return true or false
+	*/
+	protected boolean gameOver()
+	{
+		return gameOver;
+	}
+	
+	/**
+	*Resign from a game
+	*/
+	protected void resign()
+	{
+		out.enque("c " + myID + " c " + oppID + " r");
+		gameOver = true;
 	}
 
 	/**
@@ -252,7 +300,53 @@ public class ControlUnit extends Thread
 			hold = null;
 		}
 	}
-
+	
+	/**
+	*Method will handle invites for a new game from opponent
+	*/
+	private void newGameRequest()
+	{
+		int result = JOptionPane.showConfirmDialog(null, "Your opponent would like to begin a new game. Would you?", "Accept Invite", JOptionPane.YES_NO_OPTION);
+		
+		//set up new game if desired and send accept or reject string to opponent
+		if(result==JOptionPane.YES_OPTION)
+		{
+			out.enque("c " + myID + " c " + oppID + " g a");
+			
+			gameOver = false;
+			
+			//decide who begins
+			if(Integer.parseInt(myID) < Integer.parseInt(oppID))
+				control = new ControlLogic(true);
+			else
+				control = new ControlLogic(false);
+		}
+		else if(result==JOptionPane.NO_OPTION)
+		{
+			out.enque("c " + myID + " c " + oppID + " g r");
+		}
+	}
+	
+	/**
+	*Method will handle draw offers from opponent
+	*/
+	private void drawRequest()
+	{
+		int result = JOptionPane.showConfirmDialog(null, "Your opponent has offered a draw; do you accept?", "Accept Draw", JOptionPane.YES_NO_OPTION);
+		
+		//send accept or reject string to opponent
+		if(result==JOptionPane.YES_OPTION)
+		{
+			out.enque("c " + myID + " c " + oppID + " d a");
+			
+			gameOver = true;
+		}
+		else if(result==JOptionPane.NO_OPTION)
+		{
+			out.enque("c " + myID + " c " + oppID + " d r");
+		}
+	}
+	
 	/**
 	*Method Decodes Recieved Strings and preforms actions based on their meanings
 	*@param recieved String
@@ -268,6 +362,7 @@ public class ControlUnit extends Thread
 			{
 				//player has been disconnected from opponent
 				engaged = false;
+				gameOver = true;
 				oppID = null;
 				System.out.println("\nOpponent has terminated the connection.");
 				status.enque("Opponent has terminated the connection.");
@@ -278,6 +373,60 @@ public class ControlUnit extends Thread
 				{
 					System.out.println("\nYou've won the game by default!\n");
 					status.enque("You've won the game by default!");
+					gameOver = true;
+				}
+				
+				else if(data.substring(12,13).equals("g"))
+				{
+					if(data.length() <= 13)
+					{
+						newGameRequest();
+						System.out.println("Opponent has requested new game.\n");
+					}
+					else if(data.substring(14).equals("a"))
+					{
+						status.enque("Opponent has accepted your new game invite.");
+						System.out.println("Opponent has accepted your new game invite.\n");
+						
+						gameOver = false;
+						
+						//decide who begins
+						if(Integer.parseInt(myID) < Integer.parseInt(oppID))
+							control = new ControlLogic(true);
+						else
+							control = new ControlLogic(false);
+					}
+					else if(data.substring(14).equals("r"))
+					{
+						status.enque("Opponent has declined to start a new game.");
+					}
+				}
+				
+				else if(data.substring(12,13).equals("d"))
+				{
+					if(data.length() <= 13)
+					{
+						drawRequest();
+						System.out.println("Opponent has offered a draw.\n");
+					}
+					else if(data.substring(14).equals("a"))
+					{
+						status.enque("Opponent has accepted your draw.");
+						System.out.println("Opponent has accepted your draw.\n");
+						
+						gameOver = true;
+					}
+					else if(data.substring(14).equals("r"))
+					{
+						status.enque("Opponent has declined your draw offer.");
+					}
+				}
+				
+				else if(data.substring(12,13).equals("r"))
+				{
+					System.out.println("\nOpponent has resigned. You won!\n");
+					status.enque("Opponent has resigned. You won!");
+					gameOver = true;
 				}
 
 				else if(data.substring(12,13).equals("c"))
@@ -301,7 +450,7 @@ public class ControlUnit extends Thread
 					hold = data.substring(18,19);
 					byte c2 = Byte.parseByte(hold);
 
-					if(data.substring(12,13).equals("m"))
+					if(data.substring(12,13).equals("m") && !gameOver)
 					{
 						moved = control.move(r1, r2, c1, c2, false);
 
@@ -311,7 +460,7 @@ public class ControlUnit extends Thread
 						if(moved)
 							oppMoves.enque("" + r1 + r2 + c1 + c2);
 					}
-					else if(data.substring(12,13).equals("j"))
+					else if(data.substring(12,13).equals("j") && !gameOver)
 					{
 						if(data.substring(20).equals("t"))
 						{
@@ -331,14 +480,19 @@ public class ControlUnit extends Thread
 								oppMoves.enque("" + r1 + r2 + c1 + c2);
 						}
 					}
+					else
+					{
+						status.enque("Your opponent tried to move though the game is over. Be suspicious!");
+					}
 					//REMOVE AFTER TEST STAGE
 					printBoard();
 
 					//see if there are anhy moves left for current player
-					if(!control.movesLeft())
+					if(!control.movesLeft() && !gameOver)
 					{
 						System.out.println("\nThere are no moves left. Opponent wins by default.\n");
 						out.enque("c " + myID + " c " + oppID + " l");
+						gameOver = true;
 						status.enque("There are no moves left. Opponent wins by default.");
 					}
 				}
@@ -368,6 +522,7 @@ public class ControlUnit extends Thread
 				if(data.substring(8,9).equals("t"))
 				{
 					engaged = true;
+					gameOver = false;
 					oppID = data.substring(10,13);
 					System.out.println("\nOpponent found: " + oppID);
 					status.enque("Opponent found: " + oppID);
@@ -384,6 +539,7 @@ public class ControlUnit extends Thread
 				else if(data.substring(8,9).equals("f"))
 				{
 					engaged = false;
+					gameOver = true;
 					oppID = null;
 					System.out.println("\nThere are no new opponents available at this time.");
 					status.enque("There are no new opponents available at this time.");
