@@ -16,6 +16,8 @@ import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JFrame;
 
+import java.net.*;
+
 
 public class Board extends JComponent
 {
@@ -76,8 +78,21 @@ public class Board extends JComponent
       dimPrefSize = new Dimension(BOARDDIM, BOARDDIM);
 
       String dhcp = JOptionPane.showInputDialog(frame, "Please input the DHCP address of GameServer: ");
-	  if(dhcp!=null && !dhcp.equals(""))
+	  if(dhcp!=null && !dhcp.equals("") && !dhcp.equals(" "))
+	  {
+		  try
+		  {
 			control = new ControlUnit(dhcp);
+		  }
+		  catch(UnknownHostException e)
+		  {
+			  JOptionPane.showMessageDialog(frame, "Could not connect to the server. Program will now exit.", "Error!", JOptionPane.INFORMATION_MESSAGE);
+			  System.exit(0);
+		  }
+	  }
+	  else
+		  System.exit(0);
+	  
       move = true;
 	  oldStatus = null;
       oppMove = new byte[4];
