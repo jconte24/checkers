@@ -239,7 +239,7 @@ public class Board extends JComponent
 							 switch(posCheck.cy)
 							 {
 								 case 31:
-								 	newX = 0;
+								 	newY = 0;
 								 	break;
 								 case 93:
 								 	newY = 1;
