@@ -17,13 +17,13 @@ public class ControlUnit extends Thread
 	private boolean engaged;
 	private int myScore;
 	private boolean mustJump;
-	private String prevString;		//string previously recieved
-	private Queue out;				//Queue for outgoing Strings
-	private Queue status;			//Queue for status updates
-	private Queue chat;				//Queue for chat messages
+	private String prevString;				//string previously recieved
+	private Queue out;						//Queue for outgoing Strings
+	protected static Queue status;	//Queue for status updates
+	private Queue chat;					//Queue for chat messages
 	private Queue oppMoves;			//Queue for opponent moves
-	private boolean gameOver;		//flag if the game is over
-	private JFrame frame;			//parent frame from calling class
+	private boolean gameOver;			//flag if the game is over
+	private JFrame frame;					//parent frame from calling class
 	
 	/**
 	*OVERLOADED

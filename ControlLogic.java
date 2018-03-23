@@ -50,6 +50,7 @@ public class ControlLogic
 			if(board[prevA][prevB].getOwner() && whom)
 			{
 				king = board[prevA][prevB].getKing();
+				System.out.println("Coor: " + prevA + prevB + currA + currB);
 
 				//test to see if the move to commit is a jump
 				if(mover.isJump(prevA, prevB, currA, currB, king, false))
@@ -81,6 +82,7 @@ public class ControlLogic
 					if(mover.otherJump(currA, currB, king))
 					{
 						System.out.println("You must jump again.");
+						ControlUnit.status.enque("You must jump again.");
 						mustJump = true;
 					}
 					else
