@@ -1,10 +1,11 @@
 /**
 *This class is the main class in the back end of the checkers game. It Implements ControlLogic and TransmitData. It also inherits from Thread.
-*@version 2.2
+*@version 3
 *@author Dan Martineau
 */
 
 import javax.swing.JOptionPane;
+import javax.swing.JFrame;
 
 public class ControlUnit extends Thread
 {
@@ -22,8 +23,10 @@ public class ControlUnit extends Thread
 	private Queue chat;				//Queue for chat messages
 	private Queue oppMoves;			//Queue for opponent moves
 	private boolean gameOver;		//flag if the game is over
-
+	private JFrame frame;			//parent frame from calling class
+	
 	/**
+	*OVERLOADED
 	*Constructor
 	*@param the DCHP of the game server
 	*/
@@ -54,6 +57,19 @@ public class ControlUnit extends Thread
 
 		//begin thread
 		start();
+	}
+	
+	/**
+	*OVERLOADED
+	*Constructor
+	*@param the DCHP of the game server
+	*@param parent frame from calling class
+	*/
+	public ControlUnit(String ip, JFrame frame) throws Exception
+	{
+		this(ip);
+		
+		this.frame = frame;
 	}
 
 	/**
@@ -306,7 +322,7 @@ public class ControlUnit extends Thread
 	*/
 	private void newGameRequest()
 	{
-		int result = JOptionPane.showConfirmDialog(null, "Your opponent would like to begin a new game. Would you?", "Accept Invite", JOptionPane.YES_NO_OPTION);
+		int result = JOptionPane.showConfirmDialog(frame, "Your opponent would like to begin a new game. Would you?", "Accept Invite", JOptionPane.YES_NO_OPTION);
 		
 		//set up new game if desired and send accept or reject string to opponent
 		if(result==JOptionPane.YES_OPTION)
@@ -332,7 +348,7 @@ public class ControlUnit extends Thread
 	*/
 	private void drawRequest()
 	{
-		int result = JOptionPane.showConfirmDialog(null, "Your opponent has offered a draw; do you accept?", "Accept Draw", JOptionPane.YES_NO_OPTION);
+		int result = JOptionPane.showConfirmDialog(frame, "Your opponent has offered a draw; do you accept?", "Accept Draw", JOptionPane.YES_NO_OPTION);
 		
 		//send accept or reject string to opponent
 		if(result==JOptionPane.YES_OPTION)
