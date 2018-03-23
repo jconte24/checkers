@@ -517,7 +517,7 @@ public class FrontEndSimulator2 extends JFrame {
             ip = jTextField3.getText();
             if(ip!=null && !ip.equals("") && !ip.equals(" "))
             {
-                control = new ControlUnit(ip, this);
+                control = new ControlUnit(ip);
 				
 				TimeUnit.MILLISECONDS.sleep(250);
 				
