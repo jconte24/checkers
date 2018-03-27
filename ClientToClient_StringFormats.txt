@@ -1,0 +1,41 @@
+Transmission string formats for CLIENT TO CLIENT communication.
+	n.b. underscores and brackets are not included in actual strings, they are here in the example to make things appear organized.
+	
+All of these data strings will begin with: [a]_[bcd]_[e]_[...] 
+
+where: [a] = "c", [bcd] = id of the current player (sending the data), and [e] will equal one of several chars as specified by StringFormats.txt. They are below for refernece:
+	n.b. some [e] commands are not present because they are not relevent. e.g. "t" is not here because TransmitData handles termination for you, so no need to use it.
+	
+	[e]--> code for client/server interaction
+		| = "n"-->new opponent 	(both command)				requests new opponent/reports new opponent
+		| = "o"-->opponent inquiry (both command)			sent to server to see whether or not calling client has an opponent
+		| = "i"-->initialize client. (client command)		this is sent to client so that it can take the [bcd] id and associate it with itself 
+		| = "c"-->command. (both command)					Means that the string contains client data and should be passed directly to a client. 
+		| = "d"-->disconnected (server command)				Server informs client that client has been disconnected from opponent.
+		| = "f"-->fetch data (server command)				requests data from the server's queue (for a particular client)
+
+
+where: [e] = "c" --> [e]_[ghi]_[f]_[...]
+	[f] --> code for the type of message one client is sending to another
+		| = "m"--> move			client is making an ordinary move and is informing opponent
+		| = "j"--> jump			client is making a jump and is informing opponent
+	[ghi]-> id of opponent that message is being sent to.
+	
+	
+	where: [f] = "m" --> [f]_[jk]_[lm]
+		[jk] --> beginning coordinates 
+		[lm] --> new coordinates
+		
+		e.g. --> "c 000 c 001 m 33 44" means that your opponent (000) has moved from [3][3] to [4][4].
+		
+	where: [f] = "j" --> [f]_[jk]_[lm]_[n]
+		[jk] --> beginning coordinates 
+		[lm] --> new coordinates
+		[n] ---> whether or not that is one's final jump
+			| = "t" --> true		indicates that opponent has no more jumps and it is your turn again
+			| = "f" --> false		means that opponent is going to double/tripple/etc jump and it's still his turn.
+		
+			e.g. --> "c 000 c 001 j 33 51 t" means that your opponent (000) has moved from [3][3] to [5][1], and after a little math, you can conclude that your piece at [4][2] has been jumped. "t" means it's your turn.
+	
+
+
