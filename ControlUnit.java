@@ -4,6 +4,7 @@
 *@author Dan Martineau
 */
 
+import java.util.concurrent.TimeUnit;
 import javax.swing.JOptionPane;
 import javax.swing.JFrame;
 
@@ -328,6 +329,10 @@ public class ControlUnit extends Thread
 
 			//make sure we have opponent
 			network.engagementStatus();
+                        
+                        //brief pause for program to catch up with thread
+                        try{TimeUnit.MILLISECONDS.sleep(95);}
+                        catch(Exception e){System.out.println(e);}
 
 			try
 			{

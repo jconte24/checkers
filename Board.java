@@ -76,12 +76,14 @@ public class Board extends JComponent
    private String currOpp;
    private String prevOpp;
    private boolean wasDisengaged;
+   private boolean boardEmpty;
 
    public Board(JFrame frame) throws Exception
    {
       posChecks = new ArrayList<>();
       dimPrefSize = new Dimension(BOARDDIM, BOARDDIM);
       prevOpp = "";
+      boardEmpty = true;
 
       String dhcp = JOptionPane.showInputDialog(frame, "Please input the DHCP address of GameServer: ", "localhost");
 	  if(dhcp!=null && !dhcp.equals("") && !dhcp.equals(" "))
@@ -187,8 +189,12 @@ public class Board extends JComponent
                                     
                                     engaged();
 
-                                    fillBoard();
                                     //clear and repopulate the board
+                                    if(boardEmpty)
+                                    {
+                                        fillBoard();
+                                        boardEmpty = false;
+                                    }
                                 }
                                 else if(!prevOpp.equals(currOpp) && !control.engaged())
                                 {
